@@ -58,7 +58,7 @@ All financial amounts (`total_amount`, `tax_amount`, `amount` in payments) use `
 - `idx_receipts_user_category` (`user_id`, `category_id`)
 - `idx_receipts_user_vendor` (`user_id`, `vendor_name`)
 - `idx_receipts_user_created` (`user_id`, `created_at`)
-- `idx_usage_user_ym` (`user_id`, `year_month`)
+- `idx_usage_user_month` (`user_id`, `usage_month`)
 
 ## Concurrency Control
-The `monthly_usage` table enforces a unique constraint on `(user_id, year_month)`. Incrementing monthly usage executes inside a transaction using pessimistic write locks (`findForUpdate`) to guarantee concurrency safety during simultaneous file uploads.
+The `monthly_usage` table enforces a unique constraint on `(user_id, usage_month)`. Incrementing monthly usage executes inside a transaction using pessimistic write locks (`findForUpdate`) to guarantee concurrency safety during simultaneous file uploads.
