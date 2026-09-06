@@ -1,0 +1,18 @@
+# Build outputs & dependencies
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# File uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Operating system & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Log files
+*.log
