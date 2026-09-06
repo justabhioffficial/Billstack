@@ -52,6 +52,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly permit all preflight OPTIONS requests
                 .requestMatchers(
                     "/api/v1/auth/**",
+                    "/api/v1/health",
+                    "/health",
                     "/api/v1/webhooks/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",

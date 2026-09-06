@@ -3,6 +3,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Background self-warming ping to ensure Render backend is warm and fast
+const warmBackend = () => {
+  const backendHealthUrl = 'https://mybillstack.onrender.com/api/v1/health';
+  fetch(backendHealthUrl, { mode: 'no-cors', cache: 'no-cache' }).catch(() => {});
+};
+warmBackend();
+setInterval(warmBackend, 3 * 60 * 1000);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

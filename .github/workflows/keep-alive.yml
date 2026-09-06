@@ -2,8 +2,8 @@ name: Keep-Alive Render Ping
 
 on:
   schedule:
-    # Run every 10 minutes
-    - cron: '*/10 * * * *'
+    # Run every 5 minutes to prevent Render free-tier cold starts
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Allows manual trigger anytime from GitHub UI
 
 jobs:
@@ -12,9 +12,10 @@ jobs:
     steps:
       - name: Ping BillStack Render Backend
         run: |
-          echo "Pinging https://mybillstack.onrender.com/v3/api-docs to keep Render backend warm..."
-          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://mybillstack.onrender.com/v3/api-docs)
+          echo "Pinging https://mybillstack.onrender.com/api/v1/health to keep Render backend warm..."
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://mybillstack.onrender.com/api/v1/health)
           echo "Received HTTP Status Code: $HTTP_STATUS"
+          curl -s https://mybillstack.onrender.com/v3/api-docs > /dev/null
           if [ "$HTTP_STATUS" -eq 200 ]; then
             echo "Render Backend is warm and healthy! 🚀"
           else

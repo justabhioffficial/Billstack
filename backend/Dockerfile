@@ -24,4 +24,4 @@ COPY --from=builder /app/target/billstack-api-1.0.0.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75.0", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:mysql}", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:TieredStopAtLevel=1", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:mysql}", "-jar", "app.jar"]
