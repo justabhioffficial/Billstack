@@ -34,9 +34,9 @@ billstack:
     provider: ${OCR_PROVIDER:mock}
     api-key: ${OCR_API_KEY:mock_ocr_key}
   razorpay:
-    key-id: ${RAZORPAY_KEY_ID:rzp_test_mockkey123}
-    key-secret: ${RAZORPAY_KEY_SECRET:rzp_test_mocksecret123}
-    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:whsec_mocksecret123}
+    key-id: ${RAZORPAY_KEY_ID:${BILLSTACK_RAZORPAY_KEY_ID:rzp_test_mockkey123}}
+    key-secret: ${RAZORPAY_KEY_SECRET:${BILLSTACK_RAZORPAY_KEY_SECRET:rzp_test_mocksecret123}}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:${BILLSTACK_RAZORPAY_WEBHOOK_SECRET:whsec_mocksecret123}}
   limits:
     free-plan-monthly-limit: 20
   email:

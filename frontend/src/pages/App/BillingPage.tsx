@@ -38,17 +38,16 @@ export const BillingPage: React.FC = () => {
 
         // Check if Razorpay JS SDK is loaded and using a live key
         if ((window as any).Razorpay && checkoutData.razorpayKeyId && !checkoutData.razorpayKeyId.includes('mock')) {
-          const options = {
+          const options: any = {
             key: checkoutData.razorpayKeyId,
-            amount: checkoutData.amount * 100,
+            amount: Math.round(Number(checkoutData.amount) * 100),
             currency: checkoutData.currency,
             name: 'BillStack Pro',
             description: `BillStack Pro Plan (${billingCycle})`,
-            order_id: checkoutData.orderId,
             handler: async function (response: any) {
               try {
                 const verifyRes = await subscriptionApi.verifyPayment({
-                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_order_id: response.razorpay_order_id || checkoutData.orderId,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
                 });
@@ -73,6 +72,10 @@ export const BillingPage: React.FC = () => {
             },
             theme: { color: '#2563eb' },
           };
+
+          if (checkoutData.orderId && !checkoutData.orderId.startsWith('order_mock_')) {
+            options.order_id = checkoutData.orderId;
+          }
           const rzp = new (window as any).Razorpay(options);
           rzp.open();
           return;

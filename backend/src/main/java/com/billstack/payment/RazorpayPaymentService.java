@@ -49,7 +49,7 @@ public class RazorpayPaymentService implements PaymentService {
     public CheckoutResponseDto createOrder(User user, String plan, BigDecimal amount) {
         String razorpayOrderId = createRazorpayOrderViaApi(amount);
         if (razorpayOrderId == null) {
-            razorpayOrderId = "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
+            razorpayOrderId = "order_mock_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
         }
 
         Payment payment = new Payment();
