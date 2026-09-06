@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final AuthService authService;
-    private final com.billstack.service.SampleDataService sampleDataService;
 
-    public UserController(AuthService authService, com.billstack.service.SampleDataService sampleDataService) {
+    public UserController(AuthService authService) {
         this.authService = authService;
-        this.sampleDataService = sampleDataService;
     }
 
     @GetMapping
@@ -34,11 +32,5 @@ public class UserController {
     ) {
         UserDto user = authService.updateUserProfile(currentUser.getId(), request);
         return ResponseEntity.ok(ApiResponse.success(user, "Profile updated successfully"));
-    }
-
-    @PostMapping("/seed-past-data")
-    public ResponseEntity<ApiResponse<String>> seedPastData(@AuthenticationPrincipal UserPrincipal currentUser) {
-        sampleDataService.seedPastMonthsData(currentUser.getId());
-        return ResponseEntity.ok(ApiResponse.success("Successfully seeded past 5 months of receipt data", "Past 5-month sample data generated"));
     }
 }
