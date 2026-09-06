@@ -18,6 +18,10 @@ public interface ReceiptRepository extends JpaRepository<Receipt, String> {
 
     Optional<Receipt> findByIdAndUserId(String id, String userId);
 
+    List<Receipt> findByUserId(String userId);
+
+    boolean existsByUserIdAndReceiptNumber(String userId, String receiptNumber);
+
     @Query("SELECT r FROM Receipt r WHERE r.userId = :userId " +
            "AND (:categoryId IS NULL OR r.categoryId = :categoryId) " +
            "AND (:isBusiness IS NULL OR r.isBusiness = :isBusiness) " +

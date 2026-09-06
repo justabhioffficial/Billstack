@@ -75,6 +75,7 @@ export const authApi = {
   logout: () => api.post<ApiResponse<void>>('/auth/logout'),
   getCurrentUser: () => api.get<ApiResponse<User>>('/me'),
   updateUser: (data: any) => api.put<ApiResponse<User>>('/me', data),
+  seedPastData: () => api.post<ApiResponse<string>>('/me/seed-past-data'),
 };
 
 export const receiptApi = {

@@ -14,6 +14,15 @@ export const ReportsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
+  const monthsList = [
+    { label: 'Sep 2026', value: '2026-09' },
+    { label: 'Aug 2026', value: '2026-08' },
+    { label: 'Jul 2026', value: '2026-07' },
+    { label: 'Jun 2026', value: '2026-06' },
+    { label: 'May 2026', value: '2026-05' },
+    { label: 'Apr 2026', value: '2026-04' },
+  ];
+
   const fetchReport = async () => {
     setIsLoading(true);
     try {
@@ -50,7 +59,7 @@ export const ReportsPage: React.FC = () => {
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
               />
               <a
                 href={exportApi.getExportCsvUrl()}
@@ -67,6 +76,27 @@ export const ReportsPage: React.FC = () => {
                 Excel (.xlsx)
               </a>
             </div>
+          </div>
+
+          {/* Past Months Quick Select Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">Select Month:</span>
+            {monthsList.map((m) => {
+              const isSelected = month === m.value;
+              return (
+                <button
+                  key={m.value}
+                  onClick={() => setMonth(m.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-xs ring-2 ring-brand-300'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Report Summary Cards */}

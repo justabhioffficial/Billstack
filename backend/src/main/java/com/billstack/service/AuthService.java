@@ -31,6 +31,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final EmailService emailService;
+    private final SampleDataService sampleDataService;
+    private final com.billstack.repository.ReceiptRepository receiptRepository;
 
     public AuthService(
             UserRepository userRepository,
@@ -39,7 +41,9 @@ public class AuthService {
             AuditLogRepository auditLogRepository,
             PasswordEncoder passwordEncoder,
             JwtTokenProvider tokenProvider,
-            EmailService emailService
+            EmailService emailService,
+            SampleDataService sampleDataService,
+            com.billstack.repository.ReceiptRepository receiptRepository
     ) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -48,6 +52,8 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.emailService = emailService;
+        this.sampleDataService = sampleDataService;
+        this.receiptRepository = receiptRepository;
     }
 
     @Transactional
@@ -75,6 +81,11 @@ public class AuthService {
         subscription.setCurrentPeriodEnd(LocalDateTime.now().plusYears(1));
         subscriptionRepository.save(subscription);
 
+        // Auto-seed past 6 months of historical data
+        try {
+            sampleDataService.seedPastMonthsData(user.getId());
+        } catch (Exception ignored) {}
+
         // Audit Log
         auditLogRepository.save(new AuditLog(user.getId(), "USER_REGISTER", "USER", user.getId(), "User registered successfully"));
 
@@ -98,6 +109,14 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new UnauthorizedException("Invalid email or password.");
         }
+
+        // Auto-seed if user has less than 3 receipts
+        try {
+            long count = receiptRepository.countByUserIdAndDateRange(user.getId(), java.time.LocalDate.of(2020, 1, 1), java.time.LocalDate.now().plusYears(1));
+            if (count < 3) {
+                sampleDataService.seedPastMonthsData(user.getId());
+            }
+        } catch (Exception ignored) {}
 
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
