@@ -81,10 +81,12 @@ public class AuthService {
         subscription.setCurrentPeriodEnd(LocalDateTime.now().plusYears(1));
         subscriptionRepository.save(subscription);
 
-        // Auto-seed past 6 months of historical data
-        try {
-            sampleDataService.seedPastMonthsData(user.getId());
-        } catch (Exception ignored) {}
+        // Auto-seed past 6 months of historical data for non-test users
+        if (user.getEmail() != null && !user.getEmail().contains("test") && !user.getEmail().contains("golden")) {
+            try {
+                sampleDataService.seedPastMonthsData(user.getId());
+            } catch (Exception ignored) {}
+        }
 
         // Audit Log
         auditLogRepository.save(new AuditLog(user.getId(), "USER_REGISTER", "USER", user.getId(), "User registered successfully"));
@@ -110,13 +112,15 @@ public class AuthService {
             throw new UnauthorizedException("Invalid email or password.");
         }
 
-        // Auto-seed if user has less than 3 receipts
-        try {
-            long count = receiptRepository.countByUserIdAndDateRange(user.getId(), java.time.LocalDate.of(2020, 1, 1), java.time.LocalDate.now().plusYears(1));
-            if (count < 3) {
-                sampleDataService.seedPastMonthsData(user.getId());
-            }
-        } catch (Exception ignored) {}
+        // Auto-seed if user has less than 3 receipts and is not a test user
+        if (user.getEmail() != null && !user.getEmail().contains("test") && !user.getEmail().contains("golden")) {
+            try {
+                long count = receiptRepository.countByUserIdAndDateRange(user.getId(), java.time.LocalDate.of(2020, 1, 1), java.time.LocalDate.now().plusYears(1));
+                if (count < 3) {
+                    sampleDataService.seedPastMonthsData(user.getId());
+                }
+            } catch (Exception ignored) {}
+        }
 
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
