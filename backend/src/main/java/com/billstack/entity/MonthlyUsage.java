@@ -6,7 +6,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "monthly_usage", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_user_year_month", columnNames = {"user_id", "year_month"})
+    @UniqueConstraint(name = "uk_user_usage_month", columnNames = {"user_id", "usage_month"})
 })
 public class MonthlyUsage {
 
@@ -16,7 +16,7 @@ public class MonthlyUsage {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "year_month", nullable = false, length = 7)
+    @Column(name = "usage_month", nullable = false, length = 7)
     private String yearMonth; // Format: YYYY-MM
 
     @Column(name = "receipt_count", nullable = false)

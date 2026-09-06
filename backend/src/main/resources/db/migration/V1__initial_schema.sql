@@ -118,10 +118,10 @@ CREATE TABLE IF NOT EXISTS receipt_fields (
 CREATE TABLE IF NOT EXISTS monthly_usage (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
-    year_month VARCHAR(7) NOT NULL,
+    usage_month VARCHAR(7) NOT NULL,
     receipt_count INT NOT NULL DEFAULT 0,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT uk_user_year_month UNIQUE (user_id, year_month),
+    CONSTRAINT uk_user_usage_month UNIQUE (user_id, usage_month),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -154,4 +154,4 @@ CREATE INDEX idx_receipts_user_date ON receipts(user_id, receipt_date);
 CREATE INDEX idx_receipts_user_category ON receipts(user_id, category_id);
 CREATE INDEX idx_receipts_user_vendor ON receipts(user_id, vendor_name);
 CREATE INDEX idx_receipts_user_created ON receipts(user_id, created_at);
-CREATE INDEX idx_usage_user_ym ON monthly_usage(user_id, year_month);
+CREATE INDEX idx_usage_user_month ON monthly_usage(user_id, usage_month);
