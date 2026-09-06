@@ -47,19 +47,22 @@ public class RazorpayPaymentService implements PaymentService {
     @Override
     @Transactional
     public CheckoutResponseDto createOrder(User user, String plan, BigDecimal amount) {
-        String mockRazorpayOrderId = "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
+        String razorpayOrderId = createRazorpayOrderViaApi(amount);
+        if (razorpayOrderId == null) {
+            razorpayOrderId = "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
+        }
 
         Payment payment = new Payment();
         payment.setUserId(user.getId());
         payment.setAmount(amount);
         payment.setCurrency("INR");
         payment.setProvider("RAZORPAY");
-        payment.setProviderOrderId(mockRazorpayOrderId);
+        payment.setProviderOrderId(razorpayOrderId);
         payment.setStatus("CREATED");
         paymentRepository.save(payment);
 
         return new CheckoutResponseDto(
-                mockRazorpayOrderId,
+                razorpayOrderId,
                 keyId,
                 amount,
                 "INR",
@@ -67,6 +70,60 @@ public class RazorpayPaymentService implements PaymentService {
                 user.getEmail(),
                 user.getName()
         );
+    }
+
+    private String createRazorpayOrderViaApi(BigDecimal amount) {
+        if (keyId == null || keySecret == null || keyId.contains("mock") || keyId.isBlank() || keySecret.isBlank()) {
+            return null;
+        }
+        try {
+            long amountInPaise = amount.multiply(new BigDecimal(100)).longValue();
+            String jsonPayload = String.format("{\"amount\":%d,\"currency\":\"INR\",\"receipt\":\"rcpt_%d\"}",
+                    amountInPaise, System.currentTimeMillis());
+
+            java.net.URL url = new java.net.URL("https://api.razorpay.com/v1/orders");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            String auth = keyId.trim() + ":" + keySecret.trim();
+            String encodedAuth = java.util.Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+            conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
+
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200 || responseCode == 201) {
+                try (java.io.BufferedReader br = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    String json = response.toString();
+                    int idIdx = json.indexOf("\"id\":\"");
+                    if (idIdx != -1) {
+                        int start = idIdx + 6;
+                        int end = json.indexOf("\"", start);
+                        if (end != -1) {
+                            String realOrderId = json.substring(start, end);
+                            log.info("Successfully created Razorpay order via API: {}", realOrderId);
+                            return realOrderId;
+                        }
+                    }
+                }
+            } else {
+                log.error("Failed to create order via Razorpay API. HTTP response code: {}", responseCode);
+            }
+        } catch (Exception e) {
+            log.error("Exception occurred while calling Razorpay API to create order: ", e);
+        }
+        return null;
     }
 
     @Override
