@@ -98,10 +98,22 @@ public class ReceiptController {
         String mimeType = "image/jpeg";
         if (filename.endsWith(".pdf")) mimeType = "application/pdf";
         else if (filename.endsWith(".png")) mimeType = "image/png";
+        else if (filename.endsWith(".svg")) mimeType = "image/svg+xml";
+
+        byte[] data;
+        try {
+            data = is.readAllBytes();
+            String prefix = new String(data, 0, Math.min(data.length, 60), java.nio.charset.StandardCharsets.UTF_8);
+            if (prefix.contains("<svg")) {
+                mimeType = "image/svg+xml";
+            }
+        } catch (Exception e) {
+            data = new byte[0];
+        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType(mimeType))
-                .body(new InputStreamResource(is));
+                .body(new InputStreamResource(new java.io.ByteArrayInputStream(data)));
     }
 }
