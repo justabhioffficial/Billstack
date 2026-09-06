@@ -15,7 +15,6 @@ export const DashboardPage: React.FC = () => {
   const [recentReceipts, setRecentReceipts] = useState<Receipt[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('2026-09');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSeeding, setIsSeeding] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const monthsList = [
@@ -44,15 +43,6 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     loadDashboardData(selectedMonth);
   }, [selectedMonth]);
-
-  const handleSeedPastData = async () => {
-    setIsSeeding(true);
-    try {
-      await authApi.seedPastData();
-      await loadDashboardData(selectedMonth);
-    } catch (ignored) {}
-    setIsSeeding(false);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -90,17 +80,6 @@ export const DashboardPage: React.FC = () => {
                   ))}
                 </select>
               </div>
-
-              {/* Seed Demo Past Data Button */}
-              <button
-                onClick={handleSeedPastData}
-                disabled={isSeeding}
-                title="Populate past 5 months sample receipts"
-                className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {isSeeding ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
-                <span>Seed Past Data</span>
-              </button>
 
               <button
                 onClick={() => setIsUploadOpen(true)}
@@ -224,14 +203,8 @@ export const DashboardPage: React.FC = () => {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
+                <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs">
                   <p>No category data available for {selectedMonth}.</p>
-                  <button
-                    onClick={handleSeedPastData}
-                    className="text-brand-600 font-semibold hover:underline text-xs"
-                  >
-                    Click here to seed past sample expenses
-                  </button>
                 </div>
               )}
             </div>
@@ -316,16 +289,9 @@ export const DashboardPage: React.FC = () => {
                 </div>
                 <h4 className="font-bold text-slate-800 text-base">You haven't uploaded any receipts yet.</h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Upload your first receipt image or digital PDF, or click "Seed Past Data" to populate historical months.
+                  Upload your first receipt image or digital PDF to start organizing your monthly business expenses.
                 </p>
-                <div className="flex justify-center gap-3 pt-2">
-                  <button
-                    onClick={handleSeedPastData}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-lg shadow-xs"
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Seed Past 5 Months
-                  </button>
+                <div className="flex justify-center pt-2">
                   <button
                     onClick={() => setIsUploadOpen(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-lg shadow-xs"
