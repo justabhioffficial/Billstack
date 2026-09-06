@@ -6,7 +6,29 @@
   body {
     background-color: #f8fafc;
     color: #0f172a;
+    position: relative;
+    min-height: 100vh;
   }
+}
+
+/* Full-Screen BillStack Theme Background Overlay */
+.billstack-global-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/billstack_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Translucent page background wrapper so theme image shows cleanly on all pages */
+.bg-slate-50 {
+  background-color: rgba(248, 250, 252, 0.86) !important;
 }
 
 /* Hide and remove Netlify badges, drawers, and injected feedback widgets everywhere */

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -76,6 +77,9 @@ public class ReceiptService {
         if (file.getSize() > 10 * 1024 * 1024) {
             throw new BadRequestException("File size exceeds maximum limit of 10MB.");
         }
+
+        // Validate File Signature / Magic Bytes
+        validateMagicBytes(file);
 
         // 2. Check Monthly Usage Limit
         usageLimitService.checkAndIncrementUsage(userId);
@@ -247,5 +251,30 @@ public class ReceiptService {
             case "paymentMode" -> receipt.getPaymentMode();
             default -> null;
         };
+    }
+
+    private void validateMagicBytes(MultipartFile file) {
+        try (InputStream is = file.getInputStream()) {
+            byte[] header = new byte[8];
+            int read = is.read(header, 0, header.length);
+            if (read < 4) {
+                throw new BadRequestException("Uploaded file is empty or corrupted.");
+            }
+            // Check PNG (89 50 4E 47)
+            boolean isPng = (header[0] & 0xFF) == 0x89 && (header[1] & 0xFF) == 0x50 &&
+                            (header[2] & 0xFF) == 0x4E && (header[3] & 0xFF) == 0x47;
+            // Check JPG (FF D8 FF)
+            boolean isJpg = (header[0] & 0xFF) == 0xFF && (header[1] & 0xFF) == 0xD8 &&
+                            (header[2] & 0xFF) == 0xFF;
+            // Check PDF (%PDF -> 25 50 44 46)
+            boolean isPdf = (header[0] & 0xFF) == 0x25 && (header[1] & 0xFF) == 0x50 &&
+                            (header[2] & 0xFF) == 0x44 && (header[3] & 0xFF) == 0x46;
+
+            if (!isPng && !isJpg && !isPdf) {
+                throw new BadRequestException("Invalid file signature. File header magic bytes do not match JPG, PNG, or PDF format.");
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to read file signature for validation.");
+        }
     }
 }

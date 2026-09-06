@@ -66,6 +66,10 @@ public interface ReceiptRepository extends JpaRepository<Receipt, String> {
 
     long countByOcrStatus(String ocrStatus);
 
+    @Query("SELECT COUNT(r) FROM Receipt r WHERE r.userId = :userId " +
+           "AND r.receiptDate >= :startDate AND r.receiptDate <= :endDate")
+    long countByUserIdAndDateRange(@Param("userId") String userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
     @Query("SELECT r.categoryId, COALESCE(SUM(r.totalAmount), 0), COUNT(r) FROM Receipt r " +
            "WHERE r.userId = :userId AND r.receiptDate >= :startDate AND r.receiptDate <= :endDate " +
            "GROUP BY r.categoryId")

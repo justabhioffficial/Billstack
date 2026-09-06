@@ -41,12 +41,14 @@ public class ReportService {
         BigDecimal total = receiptRepository.sumTotalByUserIdAndDateRange(userId, startDate, endDate);
         BigDecimal business = receiptRepository.sumBusinessByUserIdAndDateRange(userId, startDate, endDate);
         BigDecimal personal = receiptRepository.sumPersonalByUserIdAndDateRange(userId, startDate, endDate);
+        long totalCount = receiptRepository.countByUserIdAndDateRange(userId, startDate, endDate);
 
         MonthlyReportDto report = new MonthlyReportDto();
         report.setYearMonth(ym.toString());
         report.setTotalExpenses(total);
         report.setBusinessExpenses(business);
         report.setPersonalExpenses(personal);
+        report.setTotalReceiptsCount(totalCount);
 
         // Category Breakdown
         List<Object[]> rawCatData = receiptRepository.aggregateByCategory(userId, startDate, endDate);

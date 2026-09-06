@@ -49,6 +49,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
+      <div className="billstack-global-bg" aria-hidden="true" />
       <BrowserRouter>
         <React.Suspense fallback={<LoadingFallback />}>
           <Routes>
