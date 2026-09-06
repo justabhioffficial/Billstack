@@ -4,6 +4,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DATABASE_USERNAME:root}
     password: ${DATABASE_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 10000
+      validation-timeout: 3000
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
@@ -11,7 +18,7 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -19,5 +26,5 @@ spring:
 logging:
   level:
     root: INFO
-    com.billstack: DEBUG
+    com.billstack: INFO
     org.hibernate.SQL: WARN
