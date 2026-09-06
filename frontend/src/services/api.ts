@@ -1,7 +1,15 @@
 import axios from 'axios';
 import { ApiResponse, AuthResponse, User, Receipt, PagedResponse, Category, CategorizationRule, MonthlyReport, Subscription, CheckoutResponse, AdminStats } from '../types';
 
-const API_BASE_URL = '/api/v1';
+const getApiBaseUrl = () => {
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+    return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  }
+  return '/api/v1';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -90,13 +98,13 @@ export const reportApi = {
 
 export const exportApi = {
   getExportCsvUrl: (startDate?: string, endDate?: string) => {
-    let url = '/api/v1/exports/receipts.csv?';
+    let url = `${API_BASE_URL}/exports/receipts.csv?`;
     if (startDate) url += `startDate=${startDate}&`;
     if (endDate) url += `endDate=${endDate}&`;
     return url;
   },
   getExportExcelUrl: (startDate?: string, endDate?: string) => {
-    let url = '/api/v1/exports/receipts.xlsx?';
+    let url = `${API_BASE_URL}/exports/receipts.xlsx?`;
     if (startDate) url += `startDate=${startDate}&`;
     if (endDate) url += `endDate=${endDate}&`;
     return url;
