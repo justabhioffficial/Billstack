@@ -43,7 +43,7 @@ export const RegisterPage: React.FC = () => {
       navigate('/onboarding');
     } catch (err: any) {
       setIsSubmitting(false);
-      const msg = err.response?.data?.message || 'Registration failed. Please check details.';
+      const msg = err.response?.data?.message || (err.message === 'Network Error' ? 'Unable to connect to server. Please check your internet connection.' : err.message) || 'Registration failed. Please check details.';
       setError(msg);
     }
   };

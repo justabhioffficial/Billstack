@@ -21,7 +21,7 @@ export const LoginPage: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setIsSubmitting(false);
-      const msg = err.response?.data?.message || 'Invalid email or password.';
+      const msg = err.response?.data?.message || (err.message === 'Network Error' ? 'Unable to connect to server. Please check your internet connection.' : err.message) || 'Invalid email or password.';
       setError(msg);
     }
   };

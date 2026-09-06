@@ -13,14 +13,18 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${billstack.security.cors.allowed-origins}")
+    @Value("${billstack.security.cors.allowed-origins:*}")
     private String allowedOrigins;
 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins);
+        if (allowedOrigins != null && !allowedOrigins.isBlank() && !allowedOrigins.equals("*")) {
+            List<String> origins = Arrays.asList(allowedOrigins.split(","));
+            config.setAllowedOrigins(origins);
+        } else {
+            config.setAllowedOriginPatterns(List.of("*"));
+        }
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         config.setExposedHeaders(Arrays.asList("Content-Disposition", "Authorization"));
