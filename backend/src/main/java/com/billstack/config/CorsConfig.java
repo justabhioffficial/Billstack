@@ -31,7 +31,10 @@ public class CorsConfig {
                 }
             }
         }
-        // Universal pattern matching for all frontend deployment platforms
+        // Ensure Netlify, Vercel, Localhost, and wildcard patterns are explicitly allowed
+        patterns.add("https://*.netlify.app");
+        patterns.add("https://mybillstack.netlify.app");
+        patterns.add("http://localhost:*");
         patterns.add("*");
 
         config.setAllowedOriginPatterns(patterns);
