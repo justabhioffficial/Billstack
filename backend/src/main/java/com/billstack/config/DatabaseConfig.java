@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.util.StringUtils;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 
 @Configuration
 public class DatabaseConfig {
@@ -39,53 +37,27 @@ public class DatabaseConfig {
                     String query = uri.getQuery();
                     String userInfo = uri.getUserInfo();
 
-                    // Pre-verify DNS resolution for external database host
-                    boolean hostValid = isHostResolvable(host);
-                    if (!hostValid) {
-                        log.warn("Host '{}' is unresolvable via DNS. Falling back to built-in H2 database in MySQL mode for instant launch.", host);
-                        jdbcUrl = "jdbc:h2:mem:billstackdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1";
-                        user = "sa";
-                        pass = "";
-                        System.setProperty("spring.datasource.driver-class-name", "org.h2.Driver");
-                        System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.H2Dialect");
-                    } else {
-                        StringBuilder sb = new StringBuilder("jdbc:mysql://");
-                        sb.append(host);
-                        if (port > 0) {
-                            sb.append(":").append(port);
-                        }
-                        sb.append(path);
-
-                        if (StringUtils.hasText(query)) {
-                            sb.append("?").append(query);
-                        } else {
-                            sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-                        }
-                        jdbcUrl = sb.toString();
-
-                        if (userInfo != null && userInfo.contains(":")) {
-                            String[] userPass = userInfo.split(":", 2);
-                            if (!StringUtils.hasText(user)) user = userPass[0];
-                            if (!StringUtils.hasText(pass)) pass = userPass[1];
-                        }
+                    StringBuilder sb = new StringBuilder("jdbc:mysql://");
+                    sb.append(host);
+                    if (port > 0) {
+                        sb.append(":").append(port);
                     }
-                } else if (rawUrl.startsWith("jdbc:mysql://")) {
-                    try {
-                        String cleanHostUrl = rawUrl.substring(13);
-                        int slashIdx = cleanHostUrl.indexOf('/');
-                        int colonIdx = cleanHostUrl.indexOf(':');
-                        int endIdx = (colonIdx > 0 && colonIdx < slashIdx) ? colonIdx : (slashIdx > 0 ? slashIdx : cleanHostUrl.length());
-                        String host = cleanHostUrl.substring(0, endIdx);
+                    sb.append(path);
 
-                        if (!isHostResolvable(host)) {
-                            log.warn("JDBC Host '{}' is unresolvable via DNS. Falling back to built-in H2 database in MySQL mode.", host);
-                            jdbcUrl = "jdbc:h2:mem:billstackdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1";
-                            user = "sa";
-                            pass = "";
-                            System.setProperty("spring.datasource.driver-class-name", "org.h2.Driver");
-                            System.setProperty("spring.jpa.database-platform", "org.hibernate.dialect.H2Dialect");
-                        }
-                    } catch (Exception ignored) {}
+                    if (StringUtils.hasText(query)) {
+                        sb.append("?").append(query);
+                    } else {
+                        sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+                    }
+                    jdbcUrl = sb.toString();
+
+                    if (userInfo != null && userInfo.contains(":")) {
+                        String[] userPass = userInfo.split(":", 2);
+                        if (!StringUtils.hasText(user)) user = userPass[0];
+                        if (!StringUtils.hasText(pass)) pass = userPass[1];
+                    }
+                } else if (!rawUrl.startsWith("jdbc:")) {
+                    jdbcUrl = "jdbc:" + rawUrl;
                 }
 
                 System.setProperty("spring.datasource.url", jdbcUrl);
@@ -98,22 +70,10 @@ public class DatabaseConfig {
                     System.setProperty("spring.datasource.password", pass);
                     System.setProperty("spring.flyway.password", pass);
                 }
-                log.info("Database URL auto-sanitization result: {}", jdbcUrl);
+                log.info("Database URL auto-sanitizer set JDBC URL to: {}", jdbcUrl);
             }
         } catch (Exception e) {
-            log.warn("Static Database URL sanitization warning: {}", e.getMessage());
-        }
-    }
-
-    private static boolean isHostResolvable(String host) {
-        if (!StringUtils.hasText(host) || "localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
-            return true;
-        }
-        try {
-            InetAddress.getByName(host);
-            return true;
-        } catch (UnknownHostException e) {
-            return false;
+            log.warn("Database URL sanitization warning: {}", e.getMessage());
         }
     }
 
@@ -122,16 +82,69 @@ public class DatabaseConfig {
     @ConfigurationProperties("spring.datasource")
     public DataSourceProperties dataSourceProperties() {
         DataSourceProperties properties = new DataSourceProperties();
-        String sysUrl = System.getProperty("spring.datasource.url");
-        if (StringUtils.hasText(sysUrl)) {
-            properties.setUrl(sysUrl);
-            properties.setUsername(System.getProperty("spring.datasource.username"));
-            properties.setPassword(System.getProperty("spring.datasource.password"));
-            String driver = System.getProperty("spring.datasource.driver-class-name");
-            if (StringUtils.hasText(driver)) {
-                properties.setDriverClassName(driver);
+
+        String url = System.getProperty("spring.datasource.url");
+        if (!StringUtils.hasText(url)) {
+            url = System.getenv("DATABASE_URL");
+        }
+        if (!StringUtils.hasText(url)) {
+            url = System.getenv("SPRING_DATASOURCE_URL");
+        }
+
+        if (StringUtils.hasText(url)) {
+            String sanitized = url.trim();
+            if (sanitized.startsWith("mysql://") || sanitized.startsWith("postgres://")) {
+                try {
+                    URI uri = new URI(sanitized);
+                    String host = uri.getHost();
+                    int port = uri.getPort();
+                    String path = uri.getPath();
+                    String query = uri.getQuery();
+                    String userInfo = uri.getUserInfo();
+
+                    StringBuilder sb = new StringBuilder("jdbc:mysql://");
+                    sb.append(host);
+                    if (port > 0) sb.append(":").append(port);
+                    sb.append(path);
+
+                    if (StringUtils.hasText(query)) {
+                        sb.append("?").append(query);
+                    } else {
+                        sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+                    }
+                    sanitized = sb.toString();
+
+                    if (userInfo != null && userInfo.contains(":")) {
+                        String[] userPass = userInfo.split(":", 2);
+                        properties.setUsername(userPass[0]);
+                        properties.setPassword(userPass[1]);
+                    }
+                } catch (Exception e) {
+                    sanitized = "jdbc:" + sanitized;
+                }
+            } else if (!sanitized.startsWith("jdbc:")) {
+                sanitized = "jdbc:" + sanitized;
+            }
+            properties.setUrl(sanitized);
+        }
+
+        // If H2 database URL is active, ALWAYS enforce H2 default credentials ("sa" / "") to prevent authorization errors
+        if (properties.getUrl() != null && properties.getUrl().contains("jdbc:h2:")) {
+            properties.setUsername("sa");
+            properties.setPassword("");
+            properties.setDriverClassName("org.h2.Driver");
+        } else {
+            String envUser = System.getenv("DATABASE_USERNAME");
+            if (StringUtils.hasText(envUser)) {
+                properties.setUsername(envUser.trim());
+            }
+
+            String envPass = System.getenv("DATABASE_PASSWORD");
+            if (StringUtils.hasText(envPass)) {
+                properties.setPassword(envPass.trim());
             }
         }
+
         return properties;
     }
 }
