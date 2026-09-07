@@ -72,8 +72,10 @@ public class PaddleOCRService implements OCRService {
     }
 
     private OcrResultDto runPaddleOcrProcess(String scriptPath, String imagePath) {
+        String pythonExe = findPythonExecutable();
         try {
-            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, imagePath);
+            log.info("Executing OCR script with python '{}': {} {}", pythonExe, scriptPath, imagePath);
+            ProcessBuilder pb = new ProcessBuilder(pythonExe, scriptPath, imagePath);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
@@ -86,9 +88,8 @@ public class PaddleOCRService implements OCRService {
             }
 
             int exitCode = process.waitFor();
+            String stdout = output.toString().trim();
             if (exitCode == 0) {
-                String stdout = output.toString().trim();
-                // Find JSON substring in case of python warnings
                 int jsonStart = stdout.indexOf("{");
                 int jsonEnd = stdout.lastIndexOf("}");
                 if (jsonStart >= 0 && jsonEnd > jsonStart) {
@@ -102,13 +103,35 @@ public class PaddleOCRService implements OCRService {
                             dto.setOverallConfidence(new java.math.BigDecimal(node.path("confidence").asText("95.00")));
                         }
                         return dto;
+                    } else {
+                        log.warn("OCR Script returned non-success status: {}", node.path("error").asText());
                     }
+                } else {
+                    log.warn("OCR Script output did not contain valid JSON: {}", stdout);
                 }
+            } else {
+                log.warn("OCR Script process exited with code {}. Output: {}", exitCode, stdout);
             }
         } catch (Exception e) {
-            log.warn("Error running PaddleOCR python script: {}", e.getMessage());
+            log.warn("Error running PaddleOCR python script: {}", e.getMessage(), e);
         }
         return null;
+    }
+
+    private String findPythonExecutable() {
+        String[] candidates = {
+            "C:\\Python313\\python.exe",
+            "C:\\Python312\\python.exe",
+            "python3",
+            "python"
+        };
+        for (String candidate : candidates) {
+            File f = new File(candidate);
+            if (f.exists() && f.isFile()) {
+                return candidate;
+            }
+        }
+        return "python";
     }
 
     private File findScriptFile() {

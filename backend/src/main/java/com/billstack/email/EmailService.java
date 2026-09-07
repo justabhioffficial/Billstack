@@ -5,4 +5,5 @@ public interface EmailService {
     void sendPasswordResetEmail(String toEmail, String resetToken);
     void sendPaymentConfirmationEmail(String toEmail, String plan, String amount);
     void sendMonthlyReportSummaryEmail(String toEmail, String month, String totalSpent);
+    void sendWeeklyDigestEmail(String toEmail, String name, String summaryContent);
 }

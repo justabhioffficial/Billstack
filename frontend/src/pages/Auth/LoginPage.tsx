@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Receipt, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { analytics } from '../../services/analytics';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password });
+      analytics.trackLogin('email');
       navigate('/dashboard');
     } catch (err: any) {
       setIsSubmitting(false);

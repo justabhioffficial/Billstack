@@ -22,12 +22,15 @@ export const Footer: React.FC = () => {
 
           {/* Product Links */}
           <div>
-            <h4 className="text-sm font-semibold text-white mb-3">Product</h4>
+            <h4 className="text-sm font-semibold text-white mb-3">Product & Tools</h4>
             <ul className="space-y-2 text-xs">
               <li><Link to="/#features" className="hover:text-white transition-colors">Features</Link></li>
               <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link to="/tools/gst-calculator" className="hover:text-white transition-colors">Free India GST Calculator</Link></li>
+              <li><Link to="/tools/expense-calculator" className="hover:text-white transition-colors">Tax Savings Estimator</Link></li>
+              <li><Link to="/tools/checklist" className="hover:text-white transition-colors">CA Compliance Checklist</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/faq" className="hover:text-white transition-colors">Frequently Asked Questions</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
             </ul>
           </div>
 

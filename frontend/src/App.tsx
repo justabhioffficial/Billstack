@@ -15,6 +15,11 @@ const LoginPage = React.lazy(() => import('./pages/Auth/LoginPage').then(m => ({
 const RegisterPage = React.lazy(() => import('./pages/Auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = React.lazy(() => import('./pages/Auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 
+// Public Tools (SEO)
+const GstCalculatorPage = React.lazy(() => import('./pages/Public/GstCalculatorPage').then(m => ({ default: m.GstCalculatorPage })));
+const ExpenseCalculatorPage = React.lazy(() => import('./pages/Public/ExpenseCalculatorPage').then(m => ({ default: m.ExpenseCalculatorPage })));
+const ChecklistPage = React.lazy(() => import('./pages/Public/ChecklistPage').then(m => ({ default: m.ChecklistPage })));
+
 // Protected App Pages
 const OnboardingPage = React.lazy(() => import('./pages/App/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
 const DashboardPage = React.lazy(() => import('./pages/App/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -25,6 +30,14 @@ const ReportsPage = React.lazy(() => import('./pages/App/ReportsPage').then(m =>
 const BillingPage = React.lazy(() => import('./pages/App/BillingPage').then(m => ({ default: m.BillingPage })));
 const SettingsPage = React.lazy(() => import('./pages/App/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const AdminPage = React.lazy(() => import('./pages/App/AdminPage').then(m => ({ default: m.AdminPage })));
+const FounderDashboardPage = React.lazy(() => import('./pages/App/FounderDashboardPage').then(m => ({ default: m.FounderDashboardPage })));
+const ReferralPage = React.lazy(() => import('./pages/App/ReferralPage').then(m => ({ default: m.ReferralPage })));
+
+const ExpenseIntelligencePage = React.lazy(() => import('./pages/App/ExpenseIntelligencePage').then(m => ({ default: m.ExpenseIntelligencePage })));
+const VendorAnalyticsPage = React.lazy(() => import('./pages/App/VendorAnalyticsPage').then(m => ({ default: m.VendorAnalyticsPage })));
+const MonthlyReviewPage = React.lazy(() => import('./pages/App/MonthlyReviewPage').then(m => ({ default: m.MonthlyReviewPage })));
+const CAReviewPage = React.lazy(() => import('./pages/App/CAReviewPage').then(m => ({ default: m.CAReviewPage })));
+const AskBillStackPage = React.lazy(() => import('./pages/App/AskBillStackPage').then(m => ({ default: m.AskBillStackPage })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -49,7 +62,6 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <div className="billstack-global-bg" aria-hidden="true" />
       <BrowserRouter>
         <React.Suspense fallback={<LoadingFallback />}>
           <Routes>
@@ -60,6 +72,9 @@ export const App: React.FC = () => {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/tools/gst-calculator" element={<GstCalculatorPage />} />
+            <Route path="/tools/expense-calculator" element={<ExpenseCalculatorPage />} />
+            <Route path="/tools/checklist" element={<ChecklistPage />} />
 
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -71,11 +86,18 @@ export const App: React.FC = () => {
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/receipts" element={<ProtectedRoute><ReceiptsPage /></ProtectedRoute>} />
             <Route path="/receipts/:id" element={<ProtectedRoute><ReceiptDetailsPage /></ProtectedRoute>} />
+            <Route path="/intelligence" element={<ProtectedRoute><ExpenseIntelligencePage /></ProtectedRoute>} />
+            <Route path="/vendors" element={<ProtectedRoute><VendorAnalyticsPage /></ProtectedRoute>} />
+            <Route path="/monthly-review" element={<ProtectedRoute><MonthlyReviewPage /></ProtectedRoute>} />
+            <Route path="/ca-review" element={<ProtectedRoute><CAReviewPage /></ProtectedRoute>} />
+            <Route path="/ask" element={<ProtectedRoute><AskBillStackPage /></ProtectedRoute>} />
+            <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/admin/founder-dashboard" element={<AdminRoute><FounderDashboardPage /></AdminRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -86,4 +108,6 @@ export const App: React.FC = () => {
   );
 };
 
+
 export default App;
+

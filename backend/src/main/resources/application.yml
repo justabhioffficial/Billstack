@@ -3,6 +3,17 @@ spring:
     name: billstack-api
   profiles:
     active: dev
+  mail:
+    host: ${MAIL_HOST:smtp.resend.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:resend}
+    password: ${MAIL_PASSWORD:re_mock_key_123}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: 8080
@@ -40,7 +51,9 @@ billstack:
   limits:
     free-plan-monthly-limit: 20
   email:
-    provider: ${EMAIL_PROVIDER:mock}
+    provider: ${EMAIL_PROVIDER:smtp}
+    from: ${MAIL_FROM:noreply@billstack.app}
+    from-name: ${MAIL_FROM_NAME:BillStack Expense Intelligence}
 
 springdoc:
   api-docs:

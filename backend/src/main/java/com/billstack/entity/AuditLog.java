@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "audit_logs")
+@Table(name = "audit_logs", indexes = {
+        @Index(name = "idx_audit_user_action", columnList = "user_id, action, created_at")
+})
 public class AuditLog {
 
     @Id
@@ -14,35 +16,51 @@ public class AuditLog {
     @Column(name = "user_id")
     private String userId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String action;
 
-    @Column(name = "entity_type", nullable = false)
-    private String entityType;
+    @Column(length = 255)
+    private String target;
 
-    @Column(name = "entity_id")
-    private String entityId;
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
+    @Column(name = "request_id", length = 64)
+    private String requestId;
+
+    @Column(nullable = false, length = 20)
+    private String status = "SUCCESS";
 
     @Column(columnDefinition = "TEXT")
-    private String metadata;
+    private String details;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        if (id == null) id = UUID.randomUUID().toString();
-        createdAt = LocalDateTime.now();
+    public AuditLog() {
+        this.id = UUID.randomUUID().toString();
+        this.createdAt = LocalDateTime.now();
     }
 
-    public AuditLog() {}
-
-    public AuditLog(String userId, String action, String entityType, String entityId, String metadata) {
+    public AuditLog(String userId, String action, String target, String ipAddress, String details) {
+        this();
         this.userId = userId;
         this.action = action;
-        this.entityType = entityType;
-        this.entityId = entityId;
-        this.metadata = metadata;
+        this.target = target;
+        this.ipAddress = ipAddress;
+        this.status = "SUCCESS";
+        this.details = details;
+    }
+
+    public AuditLog(String userId, String action, String target, String ipAddress, String requestId, String status, String details) {
+        this();
+        this.userId = userId;
+        this.action = action;
+        this.target = target;
+        this.ipAddress = ipAddress;
+        this.requestId = requestId;
+        this.status = status != null ? status : "SUCCESS";
+        this.details = details;
     }
 
     public String getId() { return id; }
@@ -54,14 +72,20 @@ public class AuditLog {
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
 
-    public String getEntityType() { return entityType; }
-    public void setEntityType(String entityType) { this.entityType = entityType; }
+    public String getTarget() { return target; }
+    public void setTarget(String target) { this.target = target; }
 
-    public String getEntityId() { return entityId; }
-    public void setEntityId(String entityId) { this.entityId = entityId; }
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

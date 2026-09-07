@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Receipt, BarChart3, Tags, CreditCard, Settings, ShieldAlert, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, Tags, CreditCard, Settings, ShieldAlert, PlusCircle, PieChart, Store, FileCheck, Calculator, Sparkles, Gift, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -13,6 +13,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenUpload }) => {
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/receipts', label: 'Receipts & Expenses', icon: Receipt },
+    { to: '/intelligence', label: 'Expense Intelligence', icon: PieChart },
+    { to: '/vendors', label: 'Vendor Intelligence', icon: Store },
+    { to: '/monthly-review', label: 'Executive Review', icon: FileCheck },
+    { to: '/ca-review', label: 'CA Checklist', icon: Calculator },
+    { to: '/ask', label: 'Ask BillStack', icon: Sparkles },
+    { to: '/referrals', label: 'Refer & Earn', icon: Gift },
     { to: '/reports', label: 'Reports & Analytics', icon: BarChart3 },
     { to: '/categories', label: 'Categories & Rules', icon: Tags },
     { to: '/billing', label: 'Billing & Plan', icon: CreditCard },
@@ -20,7 +26,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenUpload }) => {
   ];
 
   if (user?.role === 'ADMIN') {
-    navItems.push({ to: '/admin', label: 'Admin Panel', icon: ShieldAlert });
+    navItems.push({ to: '/admin/founder-dashboard', label: 'Founder Dashboard', icon: TrendingUp });
+    navItems.push({ to: '/admin', label: 'Admin Health', icon: ShieldAlert });
   }
 
   return (

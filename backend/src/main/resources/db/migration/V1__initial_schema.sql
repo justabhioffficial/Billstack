@@ -129,7 +129,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NULL,
     action VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(50) NOT NULL,
+    target VARCHAR(255) NULL,
+    ip_address VARCHAR(45) NULL,
+    request_id VARCHAR(64) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    details TEXT NULL,
+    entity_type VARCHAR(50) NULL,
     entity_id VARCHAR(36) NULL,
     metadata TEXT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

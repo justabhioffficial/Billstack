@@ -5,17 +5,23 @@ import { Sidebar } from '../../components/Sidebar';
 import { MobileNav } from '../../components/MobileNav';
 import { UploadModal } from '../../components/UploadModal';
 import { Badge } from '../../components/Badge';
-import { reportApi, receiptApi, authApi } from '../../services/api';
-import { MonthlyReport, Receipt } from '../../types';
-import { IndianRupee, Briefcase, User as UserIcon, Receipt as ReceiptIcon, ArrowUpRight, Plus, PieChart as PieIcon, TrendingUp, Calendar, RefreshCw, Sparkles } from 'lucide-react';
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { reportApi, receiptApi, alertApi, gamificationApi, intelligenceApi } from '../../services/api';
+import { MonthlyReport, Receipt, ExpenseAlert, Streak, ExpenseHealth } from '../../types';
+import { IndianRupee, Briefcase, User as UserIcon, Receipt as ReceiptIcon, ArrowUpRight, Plus, PieChart as PieIcon, TrendingUp, Calendar, RefreshCw, Sparkles, AlertTriangle, ShieldCheck, Flame, X, Store, FileCheck, Calculator, ChevronDown, Zap } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+
+import { WeeklySummaryCard } from '../../components/WeeklySummaryCard';
 
 export const DashboardPage: React.FC = () => {
   const [report, setReport] = useState<MonthlyReport | null>(null);
   const [recentReceipts, setRecentReceipts] = useState<Receipt[]>([]);
+  const [alerts, setAlerts] = useState<ExpenseAlert[]>([]);
+  const [streak, setStreak] = useState<Streak | null>(null);
+  const [health, setHealth] = useState<ExpenseHealth | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('2026-09');
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const monthsList = [
     { label: 'Sep 2026', value: '2026-09' },
@@ -29,15 +35,30 @@ export const DashboardPage: React.FC = () => {
   const loadDashboardData = async (monthStr: string = selectedMonth) => {
     setIsLoading(true);
     try {
-      const [reportRes, receiptsRes] = await Promise.all([
+      const [reportRes, receiptsRes, alertsRes, streakRes, healthRes] = await Promise.all([
         reportApi.getMonthlyReport(monthStr),
-        receiptApi.getReceipts({ page: 0, size: 6 })
+        receiptApi.getReceipts({ page: 0, size: 6 }),
+        alertApi.getAlerts(),
+        gamificationApi.getStreaks(),
+        intelligenceApi.getExpenseHealth(),
       ]);
 
       if (reportRes.data.success) setReport(reportRes.data.data);
       if (receiptsRes.data.success) setRecentReceipts(receiptsRes.data.data.content);
+      if (alertsRes.data.success) setAlerts(alertsRes.data.data);
+      if (streakRes.data.success) setStreak(streakRes.data.data);
+      if (healthRes.data.success) setHealth(healthRes.data.data);
     } catch (ignored) {}
     setIsLoading(false);
+  };
+
+  const handleDismissAlert = async (alertId: string) => {
+    try {
+      await alertApi.dismissAlert(alertId);
+      setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+    } catch (e) {
+      console.error('Failed to dismiss alert:', e);
+    }
   };
 
   useEffect(() => {
@@ -91,25 +112,138 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Past Months Navigation Pills Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">Quick Select:</span>
-            {monthsList.map((m) => {
-              const isSelected = selectedMonth === m.value;
-              return (
-                <button
-                  key={m.value}
-                  onClick={() => setSelectedMonth(m.value)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 ${
-                    isSelected
-                      ? 'bg-brand-600 text-white shadow-xs ring-2 ring-brand-300'
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          {/* Smart Weekly Digest Card */}
+          <WeeklySummaryCard />
+
+          {/* Smart Spending Alerts Banner */}
+          {alerts && alerts.length > 0 && (
+            <div className="space-y-2">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className={`p-4 rounded-xl border flex items-center justify-between shadow-xs transition-all ${
+                    alert.severity === 'CRITICAL'
+                      ? 'bg-red-50 border-red-200 text-red-900'
+                      : alert.severity === 'WARNING'
+                      ? 'bg-amber-50 border-amber-200 text-amber-900'
+                      : 'bg-indigo-50 border-indigo-200 text-indigo-900'
                   }`}
                 >
-                  {m.label}
-                </button>
-              );
-            })}
+                  <div className="flex items-center space-x-3">
+                    <AlertTriangle className={`w-5 h-5 shrink-0 ${
+                      alert.severity === 'CRITICAL' ? 'text-red-600' : alert.severity === 'WARNING' ? 'text-amber-600' : 'text-indigo-600'
+                    }`} />
+                    <div>
+                      <h4 className="font-bold text-sm">{alert.title}</h4>
+                      <p className="text-xs mt-0.5 opacity-90">{alert.message}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDismissAlert(alert.id)}
+                    className="p-1 rounded-lg hover:bg-black/5 text-slate-500 hover:text-slate-800 transition-colors"
+                    title="Dismiss Alert"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gamification Streak & Quick Intelligence Bar with Toggle Button */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xs relative overflow-hidden transition-all duration-300">
+            {/* Toggle Header Button */}
+            <button
+              type="button"
+              onClick={() => setIsShortcutsOpen(!isShortcutsOpen)}
+              className="w-full p-4 flex items-center justify-between hover:bg-slate-50/80 transition-colors text-left focus:outline-none cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 text-sm">Quick Actions & Tracking Intelligence</h3>
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-semibold text-[10px] rounded-full border border-indigo-100">
+                      3 Shortcuts
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Streak score, MoM intelligence shift & natural language search
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline-block text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                  Health Score: {health?.score || 100}/100
+                </span>
+                <div className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-700 transition-transform duration-300 ${isShortcutsOpen ? 'rotate-180 bg-slate-100' : ''}`}>
+                  <ChevronDown className="w-5 h-5" />
+                </div>
+              </div>
+            </button>
+
+            {/* Collapsible Content Grid with Smooth Transition */}
+            <div
+              className={`transition-all duration-300 ease-in-out ${
+                isShortcutsOpen ? 'max-h-[500px] opacity-100 p-4 pt-0 border-t border-slate-100' : 'max-h-0 opacity-0 overflow-hidden'
+              }`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                {/* Card 1: Streak */}
+                <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
+                      <Flame className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tracking Streak</div>
+                      <div className="font-extrabold text-sm text-slate-900">{streak?.streakLabel || 'Active User'}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xl font-black text-slate-900">{streak?.totalOrganizedReceipts || 0}</span>
+                    <div className="text-[11px] text-slate-500 font-medium">Organized</div>
+                  </div>
+                </div>
+
+                {/* Card 2: Where Did My Money Go */}
+                <Link
+                  to="/intelligence"
+                  className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 hover:bg-white hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <PieIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">Where Did My Money Go?</div>
+                      <div className="text-xs text-slate-500">MoM shifts & Health ({health?.score || 100}/100)</div>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                </Link>
+
+                {/* Card 3: Ask BillStack */}
+                <Link
+                  to="/ask"
+                  className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 hover:bg-white hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">Ask BillStack</div>
+                      <div className="text-xs text-slate-500">Natural language expense search</div>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Metric Cards */}
@@ -182,25 +316,44 @@ export const DashboardPage: React.FC = () => {
                 </h3>
               </div>
               {report?.categoryBreakdown && report.categoryBreakdown.length > 0 ? (
-                <div className="h-64 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={report.categoryBreakdown}
-                        dataKey="amount"
-                        nameKey="categoryName"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label={({ categoryName, percentage }) => `${categoryName} (${percentage}%)`}
-                      >
-                        {report.categoryBreakdown.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color || '#2563EB'} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: any) => [`₹${value}`, 'Amount']} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
+                  <div className="h-56 w-full sm:w-1/2 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={report.categoryBreakdown}
+                          dataKey="amount"
+                          nameKey="categoryName"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={75}
+                          paddingAngle={3}
+                        >
+                          {report.categoryBreakdown.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color || '#2563EB'} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Amount']} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Clean Legend List */}
+                  <div className="w-full sm:w-1/2 space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {report.categoryBreakdown.map((cat, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                        <div className="flex items-center space-x-2 truncate">
+                          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color || '#2563EB' }}></span>
+                          <span className="font-semibold text-slate-800 truncate">{cat.categoryName}</span>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <span className="font-bold text-slate-900">₹{cat.amount.toLocaleString('en-IN')}</span>
+                          <span className="text-[11px] text-slate-500 ml-1 font-medium">({cat.percentage}%)</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs">
@@ -214,18 +367,19 @@ export const DashboardPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-brand-600" />
-                  6-Month Spending Trend (Apr - Sep 2026)
+                  6-Month Spending Trend
                 </h3>
               </div>
               {report?.monthlyTrend && report.monthlyTrend.length > 0 ? (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={report.monthlyTrend}>
+                    <BarChart data={report.monthlyTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <XAxis dataKey="dateOrMonth" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(value: any) => [`₹${value}`, 'Amount']} />
-                      <Bar dataKey="businessAmount" name="Business" fill="#2563eb" stackId="a" />
-                      <Bar dataKey="personalAmount" name="Personal" fill="#94a3b8" stackId="a" />
+                      <YAxis tick={{ fontSize: 11 }} width={50} tickFormatter={(val) => val >= 1000 ? `₹${(val / 1000).toFixed(0)}k` : `₹${val}`} />
+                      <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Amount']} />
+                      <Legend verticalAlign="top" height={30} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="businessAmount" name="Business" fill="#2563eb" stackId="a" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="personalAmount" name="Personal" fill="#94a3b8" stackId="a" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

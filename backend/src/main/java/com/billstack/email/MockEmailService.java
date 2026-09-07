@@ -2,9 +2,7 @@ package com.billstack.email;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
-@Service
 public class MockEmailService implements EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(MockEmailService.class);
@@ -27,5 +25,10 @@ public class MockEmailService implements EmailService {
     @Override
     public void sendMonthlyReportSummaryEmail(String toEmail, String month, String totalSpent) {
         log.info("[EMAIL MOCK] Monthly report summary sent to {}: Month={}, Total Spent=₹{}", toEmail, month, totalSpent);
+    }
+
+    @Override
+    public void sendWeeklyDigestEmail(String toEmail, String name, String summaryContent) {
+        log.info("[EMAIL MOCK] Weekly expense digest sent to {} ({}): content len={}", name, toEmail, summaryContent != null ? summaryContent.length() : 0);
     }
 }

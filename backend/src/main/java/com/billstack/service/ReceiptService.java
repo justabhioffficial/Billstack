@@ -39,6 +39,7 @@ public class ReceiptService {
     private final OCRService ocrService;
     private final CategorizationService categorizationService;
     private final UsageLimitService usageLimitService;
+    private final ReferralService referralService;
 
     private static final Set<String> ALLOWED_MIME_TYPES = new HashSet<>(Arrays.asList(
             "image/jpeg", "image/png", "image/jpg", "application/pdf"
@@ -51,7 +52,8 @@ public class ReceiptService {
             StorageService storageService,
             OCRService ocrService,
             CategorizationService categorizationService,
-            UsageLimitService usageLimitService
+            UsageLimitService usageLimitService,
+            ReferralService referralService
     ) {
         this.receiptRepository = receiptRepository;
         this.receiptFieldRepository = receiptFieldRepository;
@@ -60,6 +62,7 @@ public class ReceiptService {
         this.ocrService = ocrService;
         this.categorizationService = categorizationService;
         this.usageLimitService = usageLimitService;
+        this.referralService = referralService;
     }
 
     @Transactional
@@ -143,6 +146,12 @@ public class ReceiptService {
         }
 
         receipt = receiptRepository.save(receipt);
+        
+        // Trigger viral referral activation when user processes first valid receipt
+        try {
+            referralService.activateReferralIfEligible(userId);
+        } catch (Exception ignored) {}
+
         return mapToDto(receipt);
     }
 

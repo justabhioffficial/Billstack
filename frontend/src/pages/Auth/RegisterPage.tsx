@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Receipt, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { referralApi } from '../../services/api';
+import { analytics } from '../../services/analytics';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -40,6 +42,19 @@ export const RegisterPage: React.FC = () => {
         country: 'India',
         currency: 'INR'
       });
+
+      // Track Signup Conversion in Analytics
+      analytics.trackSignup('email');
+
+      // Track Referral if present in URL
+      const searchParams = new URLSearchParams(window.location.search);
+      const refCode = searchParams.get('ref');
+      if (refCode) {
+        try {
+          await referralApi.trackReferral(refCode);
+        } catch (ignored) {}
+      }
+
       navigate('/onboarding');
     } catch (err: any) {
       setIsSubmitting(false);

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApiResponse, AuthResponse, User, Receipt, PagedResponse, Category, CategorizationRule, MonthlyReport, Subscription, CheckoutResponse, AdminStats } from '../types';
+import { ApiResponse, AuthResponse, User, Receipt, PagedResponse, Category, CategorizationRule, MonthlyReport, Subscription, CheckoutResponse, AdminStats, MonthlyIntelligence, ExpenseHealth, VendorAnalytics, ExpenseAlert, UserNotificationPreferences, MonthlyReview, CaReview, AskQueryRequest, AskQueryResponse, Streak, UserMilestone, UserFeedback, CreateFeedbackRequest, AuditLog, HealthStatus, ReferralStats, FounderMetrics, WeeklySummary, CancelSubscriptionRequest } from '../types';
 
 const getApiBaseUrl = () => {
   const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
@@ -126,8 +126,59 @@ export const subscriptionApi = {
   getSubscription: () => api.get<ApiResponse<Subscription>>('/subscription'),
   createCheckout: (plan: string, billingCycle: string = 'MONTHLY') => api.post<ApiResponse<CheckoutResponse>>('/subscription/checkout', { plan, billingCycle }),
   verifyPayment: (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => api.post<ApiResponse<Subscription>>('/subscription/verify', data),
+  cancelSubscription: (data: CancelSubscriptionRequest) => api.post<ApiResponse<Subscription>>('/subscription/cancel', data),
 };
 
 export const adminApi = {
   getStats: () => api.get<ApiResponse<AdminStats>>('/admin/stats'),
+  getHealth: () => api.get<ApiResponse<HealthStatus>>('/admin/health'),
+  getFounderMetrics: () => api.get<ApiResponse<FounderMetrics>>('/admin/founder-metrics'),
+  getAuditLogs: (page = 0, size = 20) => api.get<ApiResponse<PagedResponse<AuditLog>>>('/admin/audit-logs', { params: { page, size } }),
+  getFeedbackList: (page = 0, size = 15, status?: string) => api.get<ApiResponse<PagedResponse<UserFeedback>>>('/admin/feedback', { params: { page, size, status } }),
+  updateFeedbackStatus: (id: string, status: string, adminNotes?: string) => api.put<ApiResponse<UserFeedback>>(`/admin/feedback/${id}/status`, null, { params: { status, adminNotes } }),
+  getAnalyticsFunnel: () => api.get<ApiResponse<Record<string, any>>>('/admin/analytics/funnel'),
 };
+
+export const referralApi = {
+  getStats: () => api.get<ApiResponse<ReferralStats>>('/referrals/stats'),
+  trackReferral: (referralCode: string) => api.post<ApiResponse<void>>('/referrals/track', { referralCode }),
+};
+
+export const feedbackApi = {
+  submitFeedback: (data: CreateFeedbackRequest) => api.post<ApiResponse<UserFeedback>>('/feedback', data),
+  getUserFeedback: () => api.get<ApiResponse<UserFeedback[]>>('/feedback'),
+};
+
+export const intelligenceApi = {
+  getMonthlyIntelligence: (year?: number, month?: number) => api.get<ApiResponse<MonthlyIntelligence>>('/intelligence/monthly', { params: { year, month } }),
+  getExpenseHealth: () => api.get<ApiResponse<ExpenseHealth>>('/intelligence/health'),
+  getWeeklySummary: () => api.get<ApiResponse<WeeklySummary>>('/intelligence/weekly-summary'),
+};
+
+export const vendorApi = {
+  getVendorAnalytics: () => api.get<ApiResponse<VendorAnalytics[]>>('/vendors'),
+};
+
+export const alertApi = {
+  getAlerts: () => api.get<ApiResponse<ExpenseAlert[]>>('/alerts'),
+  dismissAlert: (alertId: string) => api.post<ApiResponse<void>>(`/alerts/${alertId}/dismiss`),
+  getPreferences: () => api.get<ApiResponse<UserNotificationPreferences>>('/alerts/preferences'),
+  updatePreferences: (preferences: UserNotificationPreferences) => api.put<ApiResponse<UserNotificationPreferences>>('/alerts/preferences', preferences),
+};
+
+export const monthlyReviewApi = {
+  getMonthlyReview: (year?: number, month?: number) => api.get<ApiResponse<MonthlyReview>>('/monthly-review', { params: { year, month } }),
+  getCaReview: (year?: number, month?: number) => api.get<ApiResponse<CaReview>>('/ca-review', { params: { year, month } }),
+};
+
+export const gamificationApi = {
+  getStreaks: () => api.get<ApiResponse<Streak>>('/gamification/streaks'),
+  getMilestones: () => api.get<ApiResponse<UserMilestone[]>>('/gamification/milestones'),
+};
+
+export const askApi = {
+  query: (data: AskQueryRequest) => api.post<ApiResponse<AskQueryResponse>>('/ask', data),
+};
+
+
+

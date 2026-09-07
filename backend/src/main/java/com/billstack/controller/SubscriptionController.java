@@ -25,17 +25,20 @@ public class SubscriptionController {
     private final UserRepository userRepository;
     private final UsageLimitService usageLimitService;
     private final PaymentService paymentService;
+    private final com.billstack.repository.SubscriptionCancellationRepository cancellationRepository;
 
     public SubscriptionController(
             SubscriptionRepository subscriptionRepository,
             UserRepository userRepository,
             UsageLimitService usageLimitService,
-            PaymentService paymentService
+            PaymentService paymentService,
+            com.billstack.repository.SubscriptionCancellationRepository cancellationRepository
     ) {
         this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
         this.usageLimitService = usageLimitService;
         this.paymentService = paymentService;
+        this.cancellationRepository = cancellationRepository;
     }
 
     @GetMapping
@@ -89,4 +92,30 @@ public class SubscriptionController {
 
         return ResponseEntity.ok(ApiResponse.success(SubscriptionDto.fromEntity(activatedSub, usageCount, limit), "Pro Subscription activated successfully!"));
     }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<ApiResponse<SubscriptionDto>> cancelSubscription(
+            @RequestBody com.billstack.dto.CancelSubscriptionRequest request,
+            @AuthenticationPrincipal UserPrincipal currentUser
+    ) {
+        Subscription sub = subscriptionRepository.findByUserId(currentUser.getId()).orElseThrow();
+        String oldPlan = sub.getPlan();
+        sub.setPlan("FREE");
+        sub.setStatus("CANCELLED");
+        subscriptionRepository.save(sub);
+
+        com.billstack.entity.SubscriptionCancellation cancellation = new com.billstack.entity.SubscriptionCancellation(
+                currentUser.getId(),
+                request.getReason() != null ? request.getReason() : "OTHER",
+                request.getFeedback(),
+                oldPlan
+        );
+        cancellationRepository.save(cancellation);
+
+        int usageCount = usageLimitService.getCurrentMonthUsage(currentUser.getId());
+        int limit = usageLimitService.getMonthlyLimit(currentUser.getId());
+
+        return ResponseEntity.ok(ApiResponse.success(SubscriptionDto.fromEntity(sub, usageCount, limit), "Subscription cancelled. You have been placed on the Free tier."));
+    }
 }
+

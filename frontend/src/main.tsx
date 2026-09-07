@@ -11,6 +11,13 @@ const warmBackend = () => {
 warmBackend();
 setInterval(warmBackend, 3 * 60 * 1000);
 
+// Register PWA Service Worker for Mobile & Desktop App Experience
+if ('serviceWorker' in navigator && (import.meta as any).env?.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
