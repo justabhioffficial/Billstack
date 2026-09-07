@@ -16,23 +16,80 @@ public class DatabaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
 
+    static {
+        try {
+            String envDbUrl = System.getenv("DATABASE_URL");
+            if (!StringUtils.hasText(envDbUrl)) {
+                envDbUrl = System.getenv("SPRING_DATASOURCE_URL");
+            }
+
+            if (StringUtils.hasText(envDbUrl)) {
+                String rawUrl = envDbUrl.trim();
+                String jdbcUrl = rawUrl;
+                String user = System.getenv("DATABASE_USERNAME");
+                String pass = System.getenv("DATABASE_PASSWORD");
+
+                if (rawUrl.startsWith("mysql://") || rawUrl.startsWith("postgres://")) {
+                    URI uri = new URI(rawUrl);
+                    String host = uri.getHost();
+                    int port = uri.getPort();
+                    String path = uri.getPath();
+                    String query = uri.getQuery();
+                    String userInfo = uri.getUserInfo();
+
+                    StringBuilder sb = new StringBuilder("jdbc:mysql://");
+                    sb.append(host);
+                    if (port > 0) {
+                        sb.append(":").append(port);
+                    }
+                    sb.append(path);
+
+                    if (StringUtils.hasText(query)) {
+                        sb.append("?").append(query);
+                    } else {
+                        sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+                    }
+                    jdbcUrl = sb.toString();
+
+                    if (userInfo != null && userInfo.contains(":")) {
+                        String[] userPass = userInfo.split(":", 2);
+                        if (!StringUtils.hasText(user)) user = userPass[0];
+                        if (!StringUtils.hasText(pass)) pass = userPass[1];
+                    }
+                } else if (!rawUrl.startsWith("jdbc:")) {
+                    jdbcUrl = "jdbc:" + rawUrl;
+                }
+
+                System.setProperty("spring.datasource.url", jdbcUrl);
+                System.setProperty("spring.flyway.url", jdbcUrl);
+                if (StringUtils.hasText(user)) {
+                    System.setProperty("spring.datasource.username", user);
+                    System.setProperty("spring.flyway.user", user);
+                }
+                if (StringUtils.hasText(pass)) {
+                    System.setProperty("spring.datasource.password", pass);
+                    System.setProperty("spring.flyway.password", pass);
+                }
+                log.info("Static Database URL auto-sanitized to JDBC format: {}", jdbcUrl);
+            }
+        } catch (Exception e) {
+            log.warn("Static Database URL sanitization warning: {}", e.getMessage());
+        }
+    }
+
     @Bean
     @Primary
     @ConfigurationProperties("spring.datasource")
     public DataSourceProperties dataSourceProperties() {
         DataSourceProperties properties = new DataSourceProperties();
 
-        // Environment variables override resolution (Render, Railway, Heroku)
         String envDbUrl = System.getenv("DATABASE_URL");
         if (!StringUtils.hasText(envDbUrl)) {
             envDbUrl = System.getenv("SPRING_DATASOURCE_URL");
         }
 
         if (StringUtils.hasText(envDbUrl)) {
-            log.info("Detected custom Database URL from environment: {}", envDbUrl.replaceAll(":([^@]+)@", ":****@"));
             String sanitizedUrl = envDbUrl.trim();
-
-            // Convert mysql:// or postgres:// URI into valid JDBC URL
             if (sanitizedUrl.startsWith("mysql://") || sanitizedUrl.startsWith("postgres://")) {
                 try {
                     URI uri = new URI(sanitizedUrl);
@@ -62,9 +119,7 @@ public class DatabaseConfig {
                         properties.setUsername(userPass[0]);
                         properties.setPassword(userPass[1]);
                     }
-                    log.info("Auto-converted Render Database URI to valid JDBC URL format: {}", properties.getUrl());
                 } catch (Exception e) {
-                    log.warn("Unable to parse URI, fallback to raw url prepending jdbc:: {}", e.getMessage());
                     properties.setUrl("jdbc:" + sanitizedUrl);
                 }
             } else if (!sanitizedUrl.startsWith("jdbc:")) {
