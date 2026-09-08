@@ -28,8 +28,13 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -67,7 +72,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().toLowerCase().trim();
         if (userRepository.existsByEmail(email)) {
-            throw new BadRequestException("Email address is already registered.");
+            throw new BadRequestException("Email address is already registered. Please sign in.");
         }
 
         User user = new User();
@@ -79,22 +84,41 @@ public class AuthService {
         user.setCurrency(request.getCurrency() != null ? request.getCurrency() : "INR");
         user.setRole("USER");
         user.setEmailVerified(false); // Unverified until OTP is verified
-        user = userRepository.save(user);
+
+        try {
+            user = userRepository.save(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new BadRequestException("Email address is already registered. Please sign in.");
+        }
 
         // Initialize default free subscription
-        Subscription subscription = new Subscription();
-        subscription.setUserId(user.getId());
-        subscription.setPlan("FREE");
-        subscription.setStatus("ACTIVE");
-        subscription.setCurrentPeriodStart(LocalDateTime.now());
-        subscription.setCurrentPeriodEnd(LocalDateTime.now().plusYears(1));
-        subscriptionRepository.save(subscription);
+        try {
+            Subscription subscription = new Subscription();
+            subscription.setUserId(user.getId());
+            subscription.setPlan("FREE");
+            subscription.setStatus("ACTIVE");
+            subscription.setCurrentPeriodStart(LocalDateTime.now());
+            subscription.setCurrentPeriodEnd(LocalDateTime.now().plusYears(1));
+            subscriptionRepository.save(subscription);
+        } catch (Exception ex) {
+            log.warn("Subscription initialization warning: {}", ex.getMessage());
+        }
 
         // Audit Log
-        auditLogRepository.save(new AuditLog(user.getId(), "USER_REGISTER", "USER", user.getId(), "User registered, pending OTP verification"));
+        try {
+            auditLogRepository.save(new AuditLog(user.getId(), "USER_REGISTER", "USER", user.getId(), "User registered, pending OTP verification"));
+        } catch (Exception ex) {
+            log.warn("Audit log warning: {}", ex.getMessage());
+        }
 
         // Generate & Send Registration OTP
-        sendAndStoreOtp(email, "REGISTRATION_VERIFICATION");
+        try {
+            sendAndStoreOtp(email, "REGISTRATION_VERIFICATION");
+        } catch (BadRequestException ex) {
+            log.warn("OTP request rate limit: {}", ex.getMessage());
+        } catch (Exception ex) {
+            log.warn("Failed to dispatch registration OTP: {}", ex.getMessage());
+        }
 
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
