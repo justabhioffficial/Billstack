@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ApiResponse, AuthResponse, User, Receipt, PagedResponse, Category, CategorizationRule, MonthlyReport, Subscription, CheckoutResponse, AdminStats, MonthlyIntelligence, ExpenseHealth, VendorAnalytics, ExpenseAlert, UserNotificationPreferences, MonthlyReview, CaReview, AskQueryRequest, AskQueryResponse, Streak, UserMilestone, UserFeedback, CreateFeedbackRequest, AuditLog, HealthStatus, ReferralStats, FounderMetrics, WeeklySummary, CancelSubscriptionRequest } from '../types';
 
 const getApiBaseUrl = () => {
-  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+  const envUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
     return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
   }
