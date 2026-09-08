@@ -64,7 +64,7 @@ public class SubscriptionController {
     ) {
         User user = userRepository.findById(currentUser.getId()).orElseThrow();
         String plan = body.getOrDefault("plan", "PRO");
-        BigDecimal amount = "YEARLY".equalsIgnoreCase(body.get("billingCycle")) ? new BigDecimal("1999.00") : new BigDecimal("199.00");
+        BigDecimal amount = "YEARLY".equalsIgnoreCase(body.get("billingCycle")) ? new BigDecimal("999.00") : new BigDecimal("99.00");
 
         CheckoutResponseDto checkout = paymentService.createOrder(user, plan, amount);
         return ResponseEntity.ok(ApiResponse.success(checkout, "Order created successfully"));

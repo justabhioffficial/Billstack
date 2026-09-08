@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Receipt, LogOut, LayoutDashboard, User as UserIcon, Download, Smartphone } from 'lucide-react';
+import { Receipt, LogOut, LayoutDashboard, User as UserIcon, Download, Smartphone, Menu } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { AppDownloadModal } from './AppDownloadModal';
 
@@ -18,16 +18,23 @@ export const Navbar: React.FC = () => {
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            {/* Logo */}
-            <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
-              <div className="bg-brand-600 text-white p-2 rounded-lg flex items-center justify-center font-bold shadow-sm">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg text-slate-900 tracking-tight leading-none">BillStack</span>
-                <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Expense Management</span>
-              </div>
-            </Link>
+            {/* Logo & 3-Bars Menu Toggle (Web & Mobile) */}
+            <div className="flex items-center gap-2">
+              {isAppRoute && (
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+                  className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  title="Toggle Side Menu"
+                  aria-label="Toggle Side Menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+              )}
+              <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
+                <img src="/logo.png" alt="BillStack Logo" className="h-10 sm:h-12 max-h-12 w-auto object-contain" />
+              </Link>
+            </div>
 
             {/* Navigation Links */}
             {!isAppRoute ? (

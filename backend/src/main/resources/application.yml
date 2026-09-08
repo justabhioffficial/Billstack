@@ -51,9 +51,15 @@ billstack:
   limits:
     free-plan-monthly-limit: 20
   email:
-    provider: ${EMAIL_PROVIDER:smtp}
-    from: ${MAIL_FROM:noreply@billstack.app}
+    provider: ${EMAIL_PROVIDER:emailjs}
+    from: ${MAIL_FROM:billstack3030@gmail.com}
     from-name: ${MAIL_FROM_NAME:BillStack Expense Intelligence}
+
+emailjs:
+  service_id: ${EMAILJS_SERVICE_ID:service_zfp3r8v}
+  template_id: ${EMAILJS_TEMPLATE_ID:template_u6mt7c3}
+  user_id: ${EMAILJS_PUBLIC_KEY:${EMAILJS_USER_ID:Y3j9_ZBMDfTDd6LWa}}
+  accessToken: ${EMAILJS_PRIVATE_KEY:${EMAILJS_ACCESS_TOKEN:q_hUIWS2mmPPeynaaHXWS}}
 
 springdoc:
   api-docs:

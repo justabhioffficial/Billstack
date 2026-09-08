@@ -148,7 +148,7 @@ public class RazorpayPaymentService implements PaymentService {
                 .orElseGet(() -> {
                     Payment p = new Payment();
                     p.setUserId(user.getId());
-                    p.setAmount(new BigDecimal("199.00"));
+                    p.setAmount(new BigDecimal("99.00"));
                     p.setProviderOrderId(orderId);
                     return p;
                 });
@@ -167,7 +167,7 @@ public class RazorpayPaymentService implements PaymentService {
         subscription.setPlan("PRO");
         subscription.setStatus("ACTIVE");
         subscription.setCurrentPeriodStart(LocalDateTime.now());
-        subscription.setCurrentPeriodEnd(LocalDateTime.now().plusMonths(1));
+        subscription.setCurrentPeriodEnd(LocalDateTime.now().plusDays(30));
         subscription.setPaymentProvider("RAZORPAY");
         subscription.setProviderSubscriptionId(orderId);
 

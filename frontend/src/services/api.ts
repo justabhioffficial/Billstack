@@ -71,7 +71,14 @@ api.interceptors.response.use(
 
 export const authApi = {
   register: (data: any) => api.post<ApiResponse<AuthResponse>>('/auth/register', data),
+  verifyRegistrationOtp: (data: { email: string; otp: string }) => api.post<ApiResponse<AuthResponse>>('/auth/verify-registration-otp', data),
+  resendOtp: (data: { email: string; purpose?: string }) => api.post<ApiResponse<void>>('/auth/resend-otp', data),
   login: (data: any) => api.post<ApiResponse<AuthResponse>>('/auth/login', data),
+  requestLoginOtp: (data: { email: string }) => api.post<ApiResponse<void>>('/auth/request-login-otp', data),
+  loginWithOtp: (data: { email: string; otp: string }) => api.post<ApiResponse<AuthResponse>>('/auth/login-with-otp', data),
+  forgotPassword: (data: { email: string }) => api.post<ApiResponse<void>>('/auth/forgot-password', data),
+  resetPassword: (data: { email: string; otp: string; newPassword: string }) => api.post<ApiResponse<void>>('/auth/reset-password', data),
+  changePassword: (data: { currentPassword: string; newPassword: string }) => api.post<ApiResponse<void>>('/auth/change-password', data),
   logout: () => api.post<ApiResponse<void>>('/auth/logout'),
   getCurrentUser: () => api.get<ApiResponse<User>>('/me'),
   updateUser: (data: any) => api.put<ApiResponse<User>>('/me', data),
@@ -109,17 +116,25 @@ export const reportApi = {
 
 export const exportApi = {
   getExportCsvUrl: (startDate?: string, endDate?: string) => {
+    const token = localStorage.getItem('billstack_token');
     let url = `${API_BASE_URL}/exports/receipts.csv?`;
+    if (token) url += `token=${encodeURIComponent(token)}&`;
     if (startDate) url += `startDate=${startDate}&`;
     if (endDate) url += `endDate=${endDate}&`;
     return url;
   },
   getExportExcelUrl: (startDate?: string, endDate?: string) => {
+    const token = localStorage.getItem('billstack_token');
     let url = `${API_BASE_URL}/exports/receipts.xlsx?`;
+    if (token) url += `token=${encodeURIComponent(token)}&`;
     if (startDate) url += `startDate=${startDate}&`;
     if (endDate) url += `endDate=${endDate}&`;
     return url;
   },
+  downloadCsv: (startDate?: string, endDate?: string) =>
+    api.get('/exports/receipts.csv', { params: { startDate, endDate }, responseType: 'blob' }),
+  downloadExcel: (startDate?: string, endDate?: string) =>
+    api.get('/exports/receipts.xlsx', { params: { startDate, endDate }, responseType: 'blob' }),
 };
 
 export const subscriptionApi = {

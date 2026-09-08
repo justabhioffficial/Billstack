@@ -203,8 +203,8 @@ export const LandingPage: React.FC = () => {
                 <h3 className="font-bold text-slate-900 text-xl">Pro Plan</h3>
                 <p className="text-xs text-slate-500 mt-1">For active solo professionals & creators</p>
                 <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-slate-900">₹199</span>
-                  <span className="text-xs text-slate-500">/ month or ₹1,999/yr</span>
+                  <span className="text-4xl font-extrabold text-slate-900">₹99</span>
+                  <span className="text-xs text-slate-500">/ month or ₹999/yr</span>
                 </div>
               </div>
 

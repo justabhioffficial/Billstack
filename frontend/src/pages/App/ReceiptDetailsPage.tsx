@@ -11,10 +11,16 @@ import {
   ArrowLeft, Save, Trash2, ExternalLink, AlertCircle, CheckCircle2,
   Download, Eye, ZoomIn, ZoomOut, RotateCw, RefreshCw, Maximize2
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getDomainCategoriesForProfession } from '../../utils/professionCategories';
 
 export const ReceiptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const { user } = useAuth();
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const domainCategories = getDomainCategoriesForProfession(user?.businessType);
 
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -22,6 +28,7 @@ export const ReceiptDetailsPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Form State
   const [vendorName, setVendorName] = useState('');
@@ -119,8 +126,33 @@ export const ReceiptDetailsPage: React.FC = () => {
     if (!id) return;
     setIsSaving(true);
     setSaveSuccess(false);
+    setSaveError(null);
 
     try {
+      let finalCategoryId = categoryId;
+
+      if (categoryId === 'custom_category_new' && customCategoryName.trim()) {
+        const catRes = await categoryApi.createCategory({ name: customCategoryName.trim() });
+        if (catRes.data.success) {
+          finalCategoryId = catRes.data.data.id;
+          setCategories((prev) => [...prev, catRes.data.data]);
+          setCategoryId(finalCategoryId);
+        }
+      } else if (categoryId.startsWith('domain_cat_')) {
+        const domainCatName = categoryId.replace('domain_cat_', '');
+        const existingCat = categories.find((c) => c.name.toLowerCase() === domainCatName.toLowerCase());
+        if (existingCat) {
+          finalCategoryId = existingCat.id;
+        } else {
+          const catRes = await categoryApi.createCategory({ name: domainCatName });
+          if (catRes.data.success) {
+            finalCategoryId = catRes.data.data.id;
+            setCategories((prev) => [...prev, catRes.data.data]);
+            setCategoryId(finalCategoryId);
+          }
+        }
+      }
+
       const res = await receiptApi.updateReceipt(id, {
         vendorName,
         receiptDate,
@@ -129,7 +161,7 @@ export const ReceiptDetailsPage: React.FC = () => {
         currency,
         receiptNumber,
         paymentMode,
-        categoryId,
+        categoryId: finalCategoryId,
         isBusiness
       });
 
@@ -138,7 +170,10 @@ export const ReceiptDetailsPage: React.FC = () => {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }
-    } catch (ignored) {}
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to update receipt details.';
+      setSaveError(msg);
+    }
     setIsSaving(false);
   };
 
@@ -207,6 +242,13 @@ export const ReceiptDetailsPage: React.FC = () => {
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Receipt details updated successfully!</span>
+            </div>
+          )}
+
+          {saveError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span className="font-semibold">{saveError}</span>
             </div>
           )}
 
@@ -395,19 +437,64 @@ export const ReceiptDetailsPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Expense Category
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Expense Category
+                      </label>
+                      {user?.businessType && (
+                        <span className="text-[9px] bg-brand-50 text-brand-700 font-bold px-1.5 py-0.5 rounded border border-brand-200">
+                          {user.businessType}
+                        </span>
+                      )}
+                    </div>
+
                     <select
                       value={categoryId}
                       onChange={(e) => setCategoryId(e.target.value)}
                       className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
                     >
                       <option value="">Uncategorized</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
+                      
+                      <optgroup label={`🌟 Recommended for ${user?.businessType || 'Your Field'}`}>
+                        {domainCategories.map((name) => {
+                          const existing = categories.find((c) => c.name.toLowerCase() === name.toLowerCase());
+                          const val = existing ? existing.id : `domain_cat_${name}`;
+                          return (
+                            <option key={name} value={val}>
+                              {name}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+
+                      {categories.filter((c) => !domainCategories.some((d) => d.toLowerCase() === c.name.toLowerCase())).length > 0 && (
+                        <optgroup label="General / Other Saved Categories">
+                          {categories
+                            .filter((c) => !domainCategories.some((d) => d.toLowerCase() === c.name.toLowerCase()))
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                        </optgroup>
+                      )}
+
+                      <option value="custom_category_new">+ Write Custom Category...</option>
                     </select>
+
+                    {categoryId === 'custom_category_new' && (
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          required
+                          value={customCategoryName}
+                          onChange={(e) => setCustomCategoryName(e.target.value)}
+                          placeholder="Type custom category (e.g. AWS Servers, Medical Supplies)..."
+                          className="w-full px-3.5 py-2 bg-white border border-brand-400 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">This custom category will be created and saved in your database.</p>
+                      </div>
+                    )}
                   </div>
 
                   <div>

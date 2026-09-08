@@ -45,7 +45,9 @@ public class UsageLimitService {
                     return subscriptionRepository.save(newSub);
                 });
 
-        boolean isPro = "PRO".equalsIgnoreCase(subscription.getPlan()) && "ACTIVE".equalsIgnoreCase(subscription.getStatus());
+        boolean isPro = "PRO".equalsIgnoreCase(subscription.getPlan())
+                && "ACTIVE".equalsIgnoreCase(subscription.getStatus())
+                && (subscription.getCurrentPeriodEnd() == null || subscription.getCurrentPeriodEnd().isAfter(java.time.LocalDateTime.now()));
 
         Optional<MonthlyUsage> usageOpt = monthlyUsageRepository.findForUpdate(userId, currentYearMonth);
         MonthlyUsage usage;
@@ -57,7 +59,7 @@ public class UsageLimitService {
         }
 
         if (!isPro && usage.getReceiptCount() >= freePlanLimit) {
-            throw new LimitExceededException("You've reached your " + freePlanLimit + " receipt limit for this month. Upgrade to Pro for unlimited uploads.");
+            throw new LimitExceededException("You have reached your 20 free receipt upload limit for this month. Upgrade to Pro for ₹99 to get 30 days of unlimited receipt uploads!");
         }
 
         usage.setReceiptCount(usage.getReceiptCount() + 1);
@@ -73,7 +75,11 @@ public class UsageLimitService {
 
     public int getMonthlyLimit(String userId) {
         Subscription subscription = subscriptionRepository.findByUserId(userId).orElse(null);
-        if (subscription != null && "PRO".equalsIgnoreCase(subscription.getPlan()) && "ACTIVE".equalsIgnoreCase(subscription.getStatus())) {
+        boolean isPro = subscription != null
+                && "PRO".equalsIgnoreCase(subscription.getPlan())
+                && "ACTIVE".equalsIgnoreCase(subscription.getStatus())
+                && (subscription.getCurrentPeriodEnd() == null || subscription.getCurrentPeriodEnd().isAfter(java.time.LocalDateTime.now()));
+        if (isPro) {
             return Integer.MAX_VALUE; // Unlimited
         }
         return freePlanLimit;

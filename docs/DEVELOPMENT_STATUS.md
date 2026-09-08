@@ -1,20 +1,31 @@
 # BillStack Development Status & Audit Log
 
-## Current Status: Checkpoint 11 — V4 Growth, Monetization, Referrals, SEO & Scale Suite (VERIFIED & STABLE)
+## Current Status: Checkpoint 12 — V5 Web + Mobile Cross-Platform Expansion (VERIFIED & STABLE)
 
 ### 📌 System Architecture & Configuration
 - **Backend**: Spring Boot 3.3.4 (Java 21/23) running on Render ([https://mybillstack.onrender.com](https://mybillstack.onrender.com)) & Local ([http://localhost:8080](http://localhost:8080)).
-- **Frontend**: React 18 + TypeScript + Vite running on Netlify ([https://mybillstack.netlify.app](https://mybillstack.netlify.app)) & Local ([http://localhost:5173](http://localhost:5173)).
-- **Database**: MySQL 8.0 running on Render with Flyway Schema Migrations (`V1__initial_schema.sql`, `V2__intelligence_and_engagement.sql`, `V3__production_analytics_feedback_copilot.sql`, `V4__growth_referrals_monetization_seo.sql`) and H2 for Dev/Testing.
-- **OCR Engine**: PyPDF2 Vector Extractor (PDFs) + EasyOCR PyTorch + OpenCV CLAHE Contrast Engine (Physical Receipts & Hand Bills).
-- **Security**: Stateless JWT Authentication, User-Isolation Enforced, Magic Bytes File Header Validation, BCrypt Password Encoding, CORS Universal Patterns.
+- **Web Frontend**: React 18 + TypeScript + Vite running on Netlify ([https://mybillstack.netlify.app](https://mybillstack.netlify.app)) & Local ([http://localhost:5173](http://localhost:5173)).
+- **Mobile Frontend**: React Native 0.76 + Expo 52 + TypeScript in `/mobile` connecting to Spring Boot REST API (`/api/v1`).
+- **Database**: MySQL 8.0 running on Render with Flyway Schema Migrations (`V1__initial_schema.sql` to `V4__growth_referrals_monetization_seo.sql`) and H2 in-memory dev mode.
+- **OCR Engine**: PyPDF2 Vector Extractor (PDFs) + EasyOCR PyTorch + OpenCV CLAHE Contrast Engine.
+- **Security**: Stateless JWT Authentication, User-Isolation Enforced, Secure Token Storage, Magic Bytes File Header Validation, BCrypt Password Encoding.
 
 ---
 
-### 📋 Checkpoints & Intelligence Features Matrix
+### 📱 V5 Cross-Platform Functionality & Readiness Classification Matrix
 
-| Feature / Checkpoint | Status | Verification Details |
-| :--- | :--- | :--- |
+| Feature Module | Platform Availability | Status Classification | Integration Details |
+| :--- | :--- | :--- | :--- |
+| **Authentication & Tokens** | Web, Android, iOS | `API READY` / `MOBILE READY` | JWT Bearer auth, secure token storage abstraction, login/register/logout. |
+| **Receipt Ingestion & Upload** | Web, Android, iOS | `API READY` / `MOBILE READY` | Camera scan, gallery photo upload, magic bytes signature validation. |
+| **OCR Processing & Status** | Web, Android, iOS | `API READY` / `MOBILE READY` | Live status tracking (`PROCESSING` → `COMPLETED` / `NEEDS_REVIEW`), EasyOCR + PyPDF2. |
+| **Receipt Review & Editing** | Web, Android, iOS | `API READY` / `MOBILE READY` | Confidence score badges, field correction (vendor, date, amount, GST, category). |
+| **Receipt List & Search** | Web, Android, iOS | `API READY` / `MOBILE READY` | Paginated API search by vendor name, invoice #, amount, OCR text. |
+| **Monthly Dashboard & Trends** | Web, Android, iOS | `API READY` / `MOBILE READY` | MoM totals, receipt counts, organization score, recent activity. |
+| **Vendor Intelligence** | Web, Android, iOS | `API READY` / `MOBILE READY` | Vendor-level aggregations, spending shares, current vs previous month. |
+| **Ask BillStack Financial Copilot**| Web, Android, iOS | `API READY` / `MOBILE READY` | Natural-language query translation via `/api/v1/ask` with 0 financial hallucination. |
+| **CSV & Excel Export** | Web, Android, iOS | `API READY` / `MOBILE READY` | Authenticated Blob download & direct query param `?token=...` support. |
+| **Responsive Web Navigation** | Web (Mobile/Tablet/Desktop)| `WEB READY` | 3-bars (☰ Menu) hamburger button & slide-over toggleable sidebar on all viewports. |
 | **1. Core Authentication & DB** | PASS | User registration, Login, JWT access/refresh token rotation, Password hashing, H2/MySQL Flyway migration. |
 | **2. Receipt Ingestion** | PASS | Multi-format upload (JPG, PNG, PDF <= 10MB), Magic Bytes file header validation, local/S3 storage abstraction, secure file serving. |
 | **3. OCR Extraction Engine** | PASS | PyPDF2 vector extraction for digital PDFs + EasyOCR + OpenCV CLAHE contrast enhancement for physical receipts/hand bills. |

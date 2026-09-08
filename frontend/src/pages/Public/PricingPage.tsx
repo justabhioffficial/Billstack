@@ -79,7 +79,7 @@ export const PricingPage: React.FC = () => {
               <p className="text-xs text-slate-500 mt-1">For active solo professionals</p>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-slate-900">
-                  {billingCycle === 'MONTHLY' ? '₹199' : '₹1,999'}
+                  {billingCycle === 'MONTHLY' ? '₹99' : '₹999'}
                 </span>
                 <span className="text-xs text-slate-500">
                   {billingCycle === 'MONTHLY' ? '/ month' : '/ year'}

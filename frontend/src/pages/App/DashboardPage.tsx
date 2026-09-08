@@ -10,7 +10,6 @@ import { MonthlyReport, Receipt, ExpenseAlert, Streak, ExpenseHealth } from '../
 import { IndianRupee, Briefcase, User as UserIcon, Receipt as ReceiptIcon, ArrowUpRight, Plus, PieChart as PieIcon, TrendingUp, Calendar, RefreshCw, Sparkles, AlertTriangle, ShieldCheck, Flame, X, Store, FileCheck, Calculator, ChevronDown, Zap } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
-import { WeeklySummaryCard } from '../../components/WeeklySummaryCard';
 
 export const DashboardPage: React.FC = () => {
   const [report, setReport] = useState<MonthlyReport | null>(null);
@@ -111,9 +110,6 @@ export const DashboardPage: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {/* Smart Weekly Digest Card */}
-          <WeeklySummaryCard />
 
           {/* Smart Spending Alerts Banner */}
           {alerts && alerts.length > 0 && (

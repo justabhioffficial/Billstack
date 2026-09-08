@@ -4,7 +4,8 @@ import { Sidebar } from '../../components/Sidebar';
 import { MobileNav } from '../../components/MobileNav';
 import { UploadModal } from '../../components/UploadModal';
 import { useAuth } from '../../contexts/AuthContext';
-import { User as UserIcon, Save, AlertTriangle } from 'lucide-react';
+import { authApi } from '../../services/api';
+import { User as UserIcon, Save, AlertTriangle, ShieldCheck, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser, logout } = useAuth();
@@ -17,6 +18,13 @@ export const SettingsPage: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
+  // Change Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -26,6 +34,23 @@ export const SettingsPage: React.FC = () => {
       setTimeout(() => setSaveMessage(false), 3000);
     } catch (ignored) {}
     setIsSaving(false);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    setIsChangingPassword(true);
+
+    try {
+      await authApi.changePassword({ currentPassword, newPassword });
+      setPasswordSuccess('Password changed successfully.');
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err: any) {
+      setPasswordError(err.response?.data?.message || 'Current password does not match.');
+    }
+    setIsChangingPassword(false);
   };
 
   const handleDeleteAccount = () => {
@@ -44,7 +69,7 @@ export const SettingsPage: React.FC = () => {
         <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 pb-20 md:pb-8 max-w-3xl">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Account Settings</h1>
-            <p className="text-xs text-slate-500">Update your profile, business defaults, and data options</p>
+            <p className="text-xs text-slate-500">Update your profile, security settings, and data options</p>
           </div>
 
           {saveMessage && (
@@ -72,7 +97,12 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Email Address</label>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified Email
+                  </span>
+                </div>
                 <input
                   type="email"
                   disabled
@@ -124,6 +154,66 @@ export const SettingsPage: React.FC = () => {
                 >
                   <Save className="w-3.5 h-3.5" />
                   {isSaving ? 'Saving...' : 'Save Profile'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* ACCOUNT SECURITY & CHANGE PASSWORD */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <h2 className="font-bold text-slate-900 text-sm pb-3 border-b border-slate-100 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              Account Security & Password
+            </h2>
+
+            {passwordError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{passwordSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg shadow-xs flex items-center gap-1.5"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  {isChangingPassword ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </form>

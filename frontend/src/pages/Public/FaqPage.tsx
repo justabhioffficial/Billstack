@@ -22,7 +22,7 @@ export const FaqPage: React.FC = () => {
     },
     {
       q: "How does the Free plan work?",
-      a: "The Free plan lets you upload and process up to 20 receipts every month with zero cost forever. If you need to process more receipts, you can upgrade to the Pro plan for ₹199/month."
+      a: "The Free plan lets you upload and process up to 20 receipts every month with zero cost forever. If you need to process more receipts, you can upgrade to the Pro plan for ₹99/month."
     },
     {
       q: "Are my uploaded receipts safe and private?",

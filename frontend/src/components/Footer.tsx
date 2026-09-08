@@ -10,10 +10,7 @@ export const Footer: React.FC = () => {
           {/* Brand Col */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-white">
-              <div className="bg-brand-600 p-1.5 rounded text-white">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-lg tracking-tight">BillStack</span>
+              <img src="/logo.png" alt="BillStack Logo" className="h-10 sm:h-12 w-auto object-contain bg-white/90 p-1 rounded-md" />
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               Turn photos and digital bills into clean, organized, tax-ready expense reports. Designed specifically for Indian freelancers and solo professionals.

@@ -12,6 +12,7 @@ public class SubscriptionDto {
     private int monthlyUsageCount;
     private int monthlyLimit;
     private boolean isLimitReached;
+    private long daysRemaining;
 
     public SubscriptionDto() {}
 
@@ -25,7 +26,21 @@ public class SubscriptionDto {
         dto.setCurrentPeriodEnd(sub.getCurrentPeriodEnd() != null ? sub.getCurrentPeriodEnd().toString() : null);
         dto.setMonthlyUsageCount(usageCount);
         dto.setMonthlyLimit(limit);
-        dto.setLimitReached("FREE".equalsIgnoreCase(sub.getPlan()) && usageCount >= limit);
+
+        boolean isProActive = "PRO".equalsIgnoreCase(sub.getPlan())
+                && "ACTIVE".equalsIgnoreCase(sub.getStatus())
+                && sub.getCurrentPeriodEnd() != null
+                && sub.getCurrentPeriodEnd().isAfter(java.time.LocalDateTime.now());
+
+        if (isProActive) {
+            long daysLeft = java.time.Duration.between(java.time.LocalDateTime.now(), sub.getCurrentPeriodEnd()).toDays();
+            dto.setDaysRemaining(Math.max(0, daysLeft));
+            dto.setLimitReached(false);
+        } else {
+            dto.setDaysRemaining(0);
+            dto.setLimitReached(usageCount >= limit);
+        }
+
         return dto;
     }
 
@@ -55,4 +70,7 @@ public class SubscriptionDto {
 
     public boolean isLimitReached() { return isLimitReached; }
     public void setLimitReached(boolean limitReached) { isLimitReached = limitReached; }
+
+    public long getDaysRemaining() { return daysRemaining; }
+    public void setDaysRemaining(long daysRemaining) { this.daysRemaining = daysRemaining; }
 }

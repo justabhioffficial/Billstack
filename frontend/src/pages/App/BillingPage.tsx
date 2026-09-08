@@ -123,7 +123,7 @@ export const BillingPage: React.FC = () => {
                 <span className="text-xs font-semibold uppercase text-slate-500">Current Active Plan</span>
                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mt-0.5">
                   {sub?.plan === 'PRO' ? (
-                    <span className="text-brand-600 flex items-center gap-1.5"><Zap className="w-5 h-5 fill-brand-600" /> Pro Plan (Unlimited)</span>
+                    <span className="text-brand-600 flex items-center gap-1.5"><Zap className="w-5 h-5 fill-brand-600" /> Pro Plan (Unlimited Receipts)</span>
                   ) : (
                     <span>Free Plan (20 Receipts / mo)</span>
                   )}
@@ -135,6 +135,25 @@ export const BillingPage: React.FC = () => {
                 {sub?.status || 'ACTIVE'}
               </span>
             </div>
+
+            {/* Pro Plan Days Remaining Indicator */}
+            {sub?.plan === 'PRO' && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm font-bold text-emerald-900">30-Day Pro Subscription Active</span>
+                  </div>
+                  <span className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-extrabold shadow-2xs">
+                    {sub.daysRemaining != null ? `${sub.daysRemaining} Days Left` : '30 Days Left'}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-700">
+                  Enjoy unlimited receipt uploads! Your subscription is active until{' '}
+                  <strong>{sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '30 days from activation'}</strong>.
+                </p>
+              </div>
+            )}
 
             {/* Monthly Usage Progress Bar */}
             <div className="space-y-1.5 pt-2">
@@ -162,8 +181,8 @@ export const BillingPage: React.FC = () => {
             <div className="bg-white p-6 rounded-xl border-2 border-brand-600 shadow-md space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Upgrade to Pro</h3>
-                  <p className="text-xs text-slate-500">Remove receipt limits, enable custom auto-rules, and export Excel reports.</p>
+                  <h3 className="text-lg font-bold text-slate-900">Upgrade to Pro (₹99 / Month)</h3>
+                  <p className="text-xs text-slate-500">Get 30 days of unlimited receipt uploads, custom auto-rules, and Excel exports.</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -172,20 +191,20 @@ export const BillingPage: React.FC = () => {
                       onClick={() => setBillingCycle('MONTHLY')}
                       className={`px-3 py-1 rounded ${billingCycle === 'MONTHLY' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}
                     >
-                      ₹199 / mo
+                      ₹99 / mo
                     </button>
                     <button
                       onClick={() => setBillingCycle('YEARLY')}
                       className={`px-3 py-1 rounded ${billingCycle === 'YEARLY' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}
                     >
-                      ₹1,999 / yr
+                      ₹999 / yr
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
-                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-brand-600" /> Unlimited Receipt Uploads</div>
+                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-brand-600" /> Unlimited Receipt Uploads (30 Days)</div>
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-brand-600" /> Priority OCR Extraction</div>
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-brand-600" /> Custom Auto-Categorization Rules</div>
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-brand-600" /> Excel (.xlsx) & CSV Downloads</div>
@@ -197,7 +216,7 @@ export const BillingPage: React.FC = () => {
                 className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
               >
                 <CreditCard className="w-4 h-4" />
-                {isProcessing ? 'Processing via Razorpay...' : `Upgrade via Razorpay (${billingCycle === 'MONTHLY' ? '₹199/mo' : '₹1,999/yr'})`}
+                {isProcessing ? 'Processing via Razorpay...' : `Upgrade via Razorpay (${billingCycle === 'MONTHLY' ? '₹99/mo' : '₹999/yr'})`}
               </button>
             </div>
           )}

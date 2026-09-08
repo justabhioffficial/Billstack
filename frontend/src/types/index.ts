@@ -108,6 +108,7 @@ export interface Subscription {
   monthlyUsageCount: number;
   monthlyLimit: number;
   isLimitReached: boolean;
+  daysRemaining?: number;
 }
 
 export interface CheckoutResponse {

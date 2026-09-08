@@ -23,13 +23,33 @@ public interface ReceiptRepository extends JpaRepository<Receipt, String> {
     boolean existsByUserIdAndReceiptNumber(String userId, String receiptNumber);
 
     @Query("SELECT r FROM Receipt r WHERE r.userId = :userId " +
+           "AND (:excludeId IS NULL OR r.id <> :excludeId) " +
+           "AND r.receiptDate >= :startDate AND r.receiptDate <= :endDate " +
+           "AND (" +
+           "     (:receiptNumber IS NOT NULL AND TRIM(:receiptNumber) <> '' AND LOWER(TRIM(r.receiptNumber)) = LOWER(TRIM(:receiptNumber))) " +
+           "     OR " +
+           "     (:vendorName IS NOT NULL AND TRIM(:vendorName) <> '' AND r.totalAmount IS NOT NULL AND LOWER(TRIM(r.vendorName)) = LOWER(TRIM(:vendorName)) AND r.totalAmount = :totalAmount)" +
+           ")")
+    List<Receipt> findDuplicateInMonth(
+            @Param("userId") String userId,
+            @Param("excludeId") String excludeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("receiptNumber") String receiptNumber,
+            @Param("vendorName") String vendorName,
+            @Param("totalAmount") BigDecimal totalAmount
+    );
+
+    @Query("SELECT r FROM Receipt r WHERE r.userId = :userId " +
            "AND (:categoryId IS NULL OR r.categoryId = :categoryId) " +
            "AND (:isBusiness IS NULL OR r.isBusiness = :isBusiness) " +
            "AND (:status IS NULL OR r.ocrStatus = :status) " +
            "AND (:startDate IS NULL OR r.receiptDate >= :startDate) " +
            "AND (:endDate IS NULL OR r.receiptDate <= :endDate) " +
            "AND (:search IS NULL OR LOWER(r.vendorName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "     OR LOWER(r.receiptNumber) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "     OR LOWER(r.receiptNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "     OR LOWER(r.ocrRawText) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "     OR CAST(r.totalAmount AS string) LIKE CONCAT('%', :search, '%')) " +
            "ORDER BY r.receiptDate DESC, r.createdAt DESC")
     Page<Receipt> findWithFilters(
             @Param("userId") String userId,

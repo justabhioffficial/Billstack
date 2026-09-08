@@ -141,6 +141,13 @@ public class ReceiptService {
                 }
             }
 
+            // Check duplicate receipt in this month after OCR extraction
+            checkForDuplicateReceipt(userId, receipt.getId(), receipt.getReceiptNumber(), receipt.getVendorName(), receipt.getTotalAmount(), receipt.getReceiptDate());
+
+        } catch (BadRequestException ex) {
+            storageService.delete(fileKey);
+            receiptRepository.delete(receipt);
+            throw ex;
         } catch (Exception ex) {
             receipt.setOcrStatus("FAILED");
         }
@@ -216,8 +223,32 @@ public class ReceiptService {
         // When user edits receipt, mark status as COMPLETED
         receipt.setOcrStatus("COMPLETED");
 
+        // Validate duplicate receipt in this month before saving update
+        checkForDuplicateReceipt(userId, receipt.getId(), receipt.getReceiptNumber(), receipt.getVendorName(), receipt.getTotalAmount(), receipt.getReceiptDate());
+
         receipt = receiptRepository.save(receipt);
         return mapToDto(receipt);
+    }
+
+    public void checkForDuplicateReceipt(String userId, String excludeId, String receiptNumber, String vendorName, BigDecimal totalAmount, LocalDate receiptDate) {
+        LocalDate date = (receiptDate != null) ? receiptDate : LocalDate.now();
+        LocalDate startDate = date.withDayOfMonth(1);
+        LocalDate endDate = date.withDayOfMonth(date.lengthOfMonth());
+
+        List<Receipt> duplicates = receiptRepository.findDuplicateInMonth(
+                userId, excludeId, startDate, endDate, receiptNumber, vendorName, totalAmount
+        );
+
+        if (!duplicates.isEmpty()) {
+            Receipt dup = duplicates.get(0);
+            String dupNum = (dup.getReceiptNumber() != null && !dup.getReceiptNumber().isBlank())
+                    ? dup.getReceiptNumber()
+                    : (receiptNumber != null ? receiptNumber : "N/A");
+            String vendor = (dup.getVendorName() != null && !dup.getVendorName().isBlank())
+                    ? dup.getVendorName()
+                    : (vendorName != null ? vendorName : "Unknown Vendor");
+            throw new BadRequestException("Receipt already uploaded: A bill with invoice/receipt number '" + dupNum + "' (Vendor: " + vendor + ") was already attached in this month.");
+        }
     }
 
     @Transactional

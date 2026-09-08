@@ -16,3 +16,8 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Database files
+backend/data/
+*.mv.db
+*.trace.db

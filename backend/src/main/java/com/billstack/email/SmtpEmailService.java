@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
-@Primary
 public class SmtpEmailService implements EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(SmtpEmailService.class);

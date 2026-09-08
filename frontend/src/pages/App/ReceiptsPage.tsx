@@ -66,6 +66,36 @@ export const ReceiptsPage: React.FC = () => {
     } catch (ignored) {}
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const res = await exportApi.downloadCsv();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `billstack_expenses_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      window.open(exportApi.getExportCsvUrl(), '_blank');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await exportApi.downloadExcel();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `billstack_expenses_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      window.open(exportApi.getExportExcelUrl(), '_blank');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
@@ -82,22 +112,22 @@ export const ReceiptsPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <a
-                href={exportApi.getExportCsvUrl()}
+              <button
+                onClick={handleExportCsv}
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 text-slate-700 font-semibold text-xs rounded-lg hover:bg-slate-50 transition-colors"
                 title="Export CSV"
               >
                 <Download className="w-3.5 h-3.5" />
                 CSV
-              </a>
-              <a
-                href={exportApi.getExportExcelUrl()}
+              </button>
+              <button
+                onClick={handleExportExcel}
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 text-slate-700 font-semibold text-xs rounded-lg hover:bg-slate-50 transition-colors"
                 title="Export Excel"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
                 Excel (.xlsx)
-              </a>
+              </button>
               <button
                 onClick={() => setIsUploadOpen(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors"
