@@ -86,7 +86,7 @@ public class AuthService {
         user.setEmailVerified(false); // Unverified until OTP is verified
 
         try {
-            user = userRepository.save(user);
+            user = userRepository.saveAndFlush(user);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
             throw new BadRequestException("Email address is already registered. Please sign in.");
         }

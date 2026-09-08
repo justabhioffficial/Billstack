@@ -2,8 +2,7 @@ package com.billstack;
 
 import com.billstack.dto.*;
 import com.billstack.entity.CategorizationRule;
-import com.billstack.repository.CategorizationRuleRepository;
-import com.billstack.repository.UserRepository;
+import com.billstack.repository.*;
 import com.billstack.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,12 +42,32 @@ class GoldenPathIntegrationTest {
     @Autowired
     private ExportService exportService;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private ReceiptRepository receiptRepository;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private OtpVerificationRepository otpVerificationRepository;
+
     private String testUserId;
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        receiptRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
+        subscriptionRepository.deleteAll();
+        auditLogRepository.deleteAll();
+        otpVerificationRepository.deleteAll();
         categorizationRuleRepository.deleteAll();
+        userRepository.deleteAll();
 
         RegisterRequest registerReq = new RegisterRequest();
         registerReq.setEmail("golden.user@example.com");
