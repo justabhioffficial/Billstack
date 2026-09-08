@@ -22,7 +22,11 @@ public class FlywayConfig {
                 log.warn("Flyway repair warning (continuing with migration): {}", ex.getMessage());
             }
             log.info("Executing Flyway database migration...");
-            flyway.migrate();
+            try {
+                flyway.migrate();
+            } catch (Exception ex) {
+                log.error("Flyway migration error (continuing application startup): {}", ex.getMessage());
+            }
         };
     }
 }
