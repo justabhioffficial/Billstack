@@ -193,11 +193,7 @@ public class AuthService {
     public void requestLoginOtp(ForgotPasswordRequest request) {
         String email = request.getEmail().toLowerCase().trim();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("No account found with email: " + email));
-
-        if (!user.isEmailVerified()) {
-            throw new BadRequestException("Your account is not verified yet. Please complete email verification first.");
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("No account found with email address: " + email));
 
         sendAndStoreOtp(email, "LOGIN");
     }
@@ -206,9 +202,14 @@ public class AuthService {
     public AuthResponse loginWithOtp(VerifyOtpRequest request) {
         String email = request.getEmail().toLowerCase().trim();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email address: " + email));
 
         validateOtp(email, request.getOtp(), "LOGIN");
+
+        if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            userRepository.save(user);
+        }
 
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);

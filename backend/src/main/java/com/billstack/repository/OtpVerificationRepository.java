@@ -26,7 +26,7 @@ public interface OtpVerificationRepository extends JpaRepository<OtpVerification
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE OtpVerification o SET o.consumed = true WHERE LOWER(o.email) = LOWER(:email) AND o.purpose = :purpose AND o.consumed = false")
     void invalidatePreviousOtps(@Param("email") String email, @Param("purpose") String purpose);
 }
