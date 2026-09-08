@@ -44,7 +44,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final EmailService emailService;
-    private final EmailJsService emailJsService;
 
     public AuthService(
             UserRepository userRepository,
@@ -54,8 +53,7 @@ public class AuthService {
             OtpVerificationRepository otpVerificationRepository,
             PasswordEncoder passwordEncoder,
             JwtTokenProvider tokenProvider,
-            EmailService emailService,
-            EmailJsService emailJsService
+            EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -65,7 +63,6 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.emailService = emailService;
-        this.emailJsService = emailJsService;
     }
 
     @Transactional
@@ -338,11 +335,11 @@ public class AuthService {
             log.warn("OTP database storage warning: {}", ex.getMessage());
         }
 
-        // Dispatch via EmailJS Service
+        // Dispatch via Email Service
         try {
-            emailJsService.sendOtpEmail(email, rawOtp, purpose);
+            emailService.sendOtpEmail(email, rawOtp, purpose);
         } catch (Exception ex) {
-            log.warn("EmailJS dispatch warning: {}", ex.getMessage());
+            log.warn("Email dispatch warning: {}", ex.getMessage());
         }
     }
 

@@ -1,6 +1,7 @@
 package com.billstack.email;
 
 public interface EmailService {
+    void sendOtpEmail(String toEmail, String otpCode, String purpose);
     void sendWelcomeEmail(String toEmail, String name);
     void sendPasswordResetEmail(String toEmail, String resetToken);
     void sendPaymentConfirmationEmail(String toEmail, String plan, String amount);

@@ -3,16 +3,17 @@ package com.billstack.email;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.context.annotation.Primary;
 
 @Service
 @Primary
@@ -35,9 +36,14 @@ public class EmailJsService implements EmailService {
     private final RestTemplate restTemplate;
 
     public EmailJsService() {
-        this.restTemplate = new RestTemplate();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(3000);
+        requestFactory.setReadTimeout(3000);
+        this.restTemplate = new RestTemplate(requestFactory);
     }
 
+    @Override
+    @Async
     public void sendOtpEmail(String toEmail, String otpCode, String purpose) {
         String subject = switch (purpose) {
             case "REGISTRATION_VERIFICATION" -> "Verify Your BillStack Account OTP";
@@ -47,6 +53,7 @@ public class EmailJsService implements EmailService {
         };
 
         String message = "Your BillStack verification code is: " + otpCode + ". This code expires in 10 minutes.";
+        logger.info("=== DISPATCHING OTP CODE === TO: {} | OTP: {} | PURPOSE: {} ===", toEmail, otpCode, purpose);
         sendEmailJsWithOtp(toEmail, subject, message, otpCode);
     }
 
@@ -61,6 +68,8 @@ public class EmailJsService implements EmailService {
             String url = "https://api.emailjs.com/api/v1.0/email/send";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            headers.set("Origin", "https://app.billstack.app");
 
             Map<String, Object> templateParams = new HashMap<>();
             templateParams.put("email", toEmail);
@@ -94,26 +103,31 @@ public class EmailJsService implements EmailService {
     }
 
     @Override
+    @Async
     public void sendWelcomeEmail(String toEmail, String name) {
         sendEmailJs(toEmail, "Welcome to BillStack!", "Hi " + name + ", welcome to BillStack expense management!");
     }
 
     @Override
+    @Async
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
         sendEmailJs(toEmail, "BillStack Password Reset Request", "Your password reset code is: " + resetToken);
     }
 
     @Override
+    @Async
     public void sendPaymentConfirmationEmail(String toEmail, String plan, String amount) {
         sendEmailJs(toEmail, "BillStack Payment Confirmation", "Your payment for " + plan + " (₹" + amount + ") was received successfully.");
     }
 
     @Override
+    @Async
     public void sendMonthlyReportSummaryEmail(String toEmail, String month, String totalSpent) {
         sendEmailJs(toEmail, "BillStack Monthly Summary (" + month + ")", "Your total expense for " + month + " was ₹" + totalSpent);
     }
 
     @Override
+    @Async
     public void sendWeeklyDigestEmail(String toEmail, String name, String summaryContent) {
         sendEmailJs(toEmail, "BillStack Weekly Digest", summaryContent);
     }

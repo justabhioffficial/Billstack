@@ -27,6 +27,29 @@ public class SmtpEmailService implements EmailService {
 
     @Override
     @Async
+    public void sendOtpEmail(String toEmail, String otpCode, String purpose) {
+        log.info("Sending OTP Email via SMTP to: {} for purpose: {}", toEmail, purpose);
+        String subject = "BillStack Security Verification OTP Code";
+        String htmlBody = """
+            <!DOCTYPE html>
+            <html>
+            <body style="font-family:sans-serif; background:#f8fafc; padding:24px;">
+              <div style="max-width:500px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:24px;">
+                <h3 style="color:#0f172a;">BillStack Verification Code</h3>
+                <p>Your verification OTP code for %s is:</p>
+                <div style="background:#f1f5f9; padding:16px; font-family:monospace; font-size:24px; font-weight:bold; text-align:center; border-radius:6px; letter-spacing:4px; color:#4f46e5;">
+                  %s
+                </div>
+                <p style="font-size:12px; color:#64748b; margin-top:16px;">This code expires in 10 minutes.</p>
+              </div>
+            </body>
+            </html>
+            """.formatted(purpose, otpCode);
+        sendHtmlMessage(toEmail, subject, htmlBody);
+    }
+
+    @Override
+    @Async
     public void sendWelcomeEmail(String toEmail, String name) {
         log.info("Sending Welcome Email to: {}", toEmail);
         String subject = "Welcome to BillStack — Your AI Expense Management Workspace";

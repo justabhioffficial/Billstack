@@ -8,6 +8,11 @@ public class MockEmailService implements EmailService {
     private static final Logger log = LoggerFactory.getLogger(MockEmailService.class);
 
     @Override
+    public void sendOtpEmail(String toEmail, String otpCode, String purpose) {
+        log.info("[EMAIL MOCK] OTP code sent to {}: Code={}, Purpose={}", toEmail, otpCode, purpose);
+    }
+
+    @Override
     public void sendWelcomeEmail(String toEmail, String name) {
         log.info("[EMAIL MOCK] Welcome to BillStack sent to {} ({})", name, toEmail);
     }
