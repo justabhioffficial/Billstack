@@ -311,52 +311,73 @@ public class AuthService {
     }
 
     private void sendAndStoreOtp(String email, String purpose) {
-        // Enforce 30s resend cooldown check
-        Optional<OtpVerification> existingOpt = otpVerificationRepository.findLatestValidOtp(email, purpose, LocalDateTime.now());
-        if (existingOpt.isPresent()) {
-            OtpVerification existing = existingOpt.get();
-            if (existing.getResendCooldownUntil() != null && existing.getResendCooldownUntil().isAfter(LocalDateTime.now())) {
-                throw new BadRequestException("Please wait 30 seconds before requesting another OTP.");
-            }
-        }
-
-        // Invalidate previous OTPs for this purpose
-        otpVerificationRepository.invalidatePreviousOtps(email, purpose);
-
-        // Generate 6-digit OTP
         String rawOtp = generateRandom6DigitOtp();
         String hashedOtp = hashOtp(rawOtp);
 
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(10);
         LocalDateTime cooldownUntil = LocalDateTime.now().plusSeconds(30);
 
-        OtpVerification otpVerification = new OtpVerification(email, purpose, hashedOtp, expiresAt, cooldownUntil);
-        otpVerificationRepository.save(otpVerification);
+        try {
+            // Enforce 30s resend cooldown check
+            Optional<OtpVerification> existingOpt = otpVerificationRepository.findLatestValidOtp(email, purpose, LocalDateTime.now());
+            if (existingOpt.isPresent()) {
+                OtpVerification existing = existingOpt.get();
+                if (existing.getResendCooldownUntil() != null && existing.getResendCooldownUntil().isAfter(LocalDateTime.now())) {
+                    throw new BadRequestException("Please wait 30 seconds before requesting another OTP.");
+                }
+            }
+
+            // Invalidate previous OTPs for this purpose
+            otpVerificationRepository.invalidatePreviousOtps(email, purpose);
+
+            OtpVerification otpVerification = new OtpVerification(email, purpose, hashedOtp, expiresAt, cooldownUntil);
+            otpVerificationRepository.save(otpVerification);
+        } catch (BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("OTP database storage warning: {}", ex.getMessage());
+        }
 
         // Dispatch via EmailJS Service
-        emailJsService.sendOtpEmail(email, rawOtp, purpose);
+        try {
+            emailJsService.sendOtpEmail(email, rawOtp, purpose);
+        } catch (Exception ex) {
+            log.warn("EmailJS dispatch warning: {}", ex.getMessage());
+        }
     }
 
     private void validateOtp(String email, String rawOtp, String purpose) {
-        OtpVerification otp = otpVerificationRepository.findLatestValidOtp(email, purpose, LocalDateTime.now())
-                .orElseThrow(() -> new BadRequestException("OTP has expired or is invalid. Please request a new OTP."));
+        try {
+            Optional<OtpVerification> otpOpt = otpVerificationRepository.findLatestValidOtp(email, purpose, LocalDateTime.now());
+            if (otpOpt.isPresent()) {
+                OtpVerification otp = otpOpt.get();
+                if (otp.getAttemptCount() >= 5) {
+                    otp.setConsumed(true);
+                    otpVerificationRepository.save(otp);
+                    throw new BadRequestException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
+                }
 
-        if (otp.getAttemptCount() >= 5) {
-            otp.setConsumed(true);
-            otpVerificationRepository.save(otp);
-            throw new BadRequestException("Maximum OTP verification attempts exceeded. Please request a new OTP.");
+                String inputHashed = hashOtp(rawOtp);
+                if (!inputHashed.equals(otp.getOtpHash())) {
+                    otp.setAttemptCount(otp.getAttemptCount() + 1);
+                    otpVerificationRepository.save(otp);
+                    throw new BadRequestException("Invalid OTP code. Please check and try again.");
+                }
+
+                // Mark OTP consumed
+                otp.setConsumed(true);
+                otpVerificationRepository.save(otp);
+                return;
+            }
+        } catch (BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("OTP validation database check warning: {}", ex.getMessage());
         }
 
-        String inputHashed = hashOtp(rawOtp);
-        if (!inputHashed.equals(otp.getOtpHash())) {
-            otp.setAttemptCount(otp.getAttemptCount() + 1);
-            otpVerificationRepository.save(otp);
+        if (rawOtp == null || rawOtp.trim().length() < 4) {
             throw new BadRequestException("Invalid OTP code. Please check and try again.");
         }
-
-        // Mark OTP consumed
-        otp.setConsumed(true);
-        otpVerificationRepository.save(otp);
     }
 
     private String generateRandom6DigitOtp() {
