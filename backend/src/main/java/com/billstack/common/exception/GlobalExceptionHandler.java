@@ -83,6 +83,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Email address or record already exists in the system.", "DUPLICATE_RESOURCE"));
     }
 
+    @ExceptionHandler(org.springframework.transaction.CannotCreateTransactionException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTransactionException(org.springframework.transaction.CannotCreateTransactionException ex) {
+        log.error("Database transaction connection error: ", ex);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error("Database connection is reconnecting. Please try signing in again.", "DATABASE_RECONNECTING"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         log.error("Unhandled internal server error: ", ex);
