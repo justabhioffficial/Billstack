@@ -44,11 +44,8 @@ public class DatabaseConfig {
                     }
                     sb.append(path);
 
-                    if (StringUtils.hasText(query)) {
-                        sb.append("?").append(query);
-                    } else {
-                        sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-                    }
+                    String cleanQuery = sanitizeQueryString(query);
+                    sb.append("?").append(cleanQuery);
                     jdbcUrl = sb.toString();
 
                     if (userInfo != null && userInfo.contains(":")) {
@@ -59,6 +56,8 @@ public class DatabaseConfig {
                 } else if (!rawUrl.startsWith("jdbc:")) {
                     jdbcUrl = "jdbc:" + rawUrl;
                 }
+
+                jdbcUrl = fixSslParameters(jdbcUrl);
 
                 System.setProperty("spring.datasource.url", jdbcUrl);
                 System.setProperty("spring.flyway.url", jdbcUrl);
@@ -75,6 +74,34 @@ public class DatabaseConfig {
         } catch (Exception e) {
             log.warn("Database URL sanitization warning: {}", e.getMessage());
         }
+    }
+
+    private static String sanitizeQueryString(String query) {
+        if (!StringUtils.hasText(query)) {
+            return "sslMode=REQUIRED&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+        }
+        String clean = query.replace("ssl-mode=", "sslMode=")
+                            .replace("sslmode=", "sslMode=");
+        if (!clean.contains("allowPublicKeyRetrieval")) {
+            clean += "&allowPublicKeyRetrieval=true";
+        }
+        if (!clean.contains("serverTimezone")) {
+            clean += "&serverTimezone=UTC";
+        }
+        return clean;
+    }
+
+    private static String fixSslParameters(String url) {
+        if (!StringUtils.hasText(url)) return url;
+        String fixed = url.replace("ssl-mode=", "sslMode=")
+                         .replace("sslmode=", "sslMode=");
+        if (fixed.contains("jdbc:mysql:") && !fixed.contains("allowPublicKeyRetrieval")) {
+            fixed += (fixed.contains("?") ? "&" : "?") + "allowPublicKeyRetrieval=true";
+        }
+        if (fixed.contains("jdbc:mysql:") && !fixed.contains("serverTimezone")) {
+            fixed += "&serverTimezone=UTC";
+        }
+        return fixed;
     }
 
     @Bean
@@ -107,11 +134,8 @@ public class DatabaseConfig {
                     if (port > 0) sb.append(":").append(port);
                     sb.append(path);
 
-                    if (StringUtils.hasText(query)) {
-                        sb.append("?").append(query);
-                    } else {
-                        sb.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-                    }
+                    String cleanQuery = sanitizeQueryString(query);
+                    sb.append("?").append(cleanQuery);
                     sanitized = sb.toString();
 
                     if (userInfo != null && userInfo.contains(":")) {
@@ -125,6 +149,7 @@ public class DatabaseConfig {
             } else if (!sanitized.startsWith("jdbc:")) {
                 sanitized = "jdbc:" + sanitized;
             }
+            sanitized = fixSslParameters(sanitized);
             properties.setUrl(sanitized);
         }
 
