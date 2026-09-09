@@ -13,6 +13,7 @@ spring:
       validation-timeout: 5000
       initialization-fail-timeout: 0
       keepalive-time: 30000
+      connection-test-query: SELECT 1
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
