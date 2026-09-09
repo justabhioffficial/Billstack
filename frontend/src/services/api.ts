@@ -6,6 +6,9 @@ const getApiBaseUrl = () => {
   if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
     return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
   }
+  if ((import.meta as any).env?.PROD) {
+    return 'https://mybillstack.onrender.com/api/v1';
+  }
   return '/api/v1';
 };
 
